@@ -1,15 +1,16 @@
 {
   "files": {
-    "main.css": "/static/css/main.e9d4127c.css",
-    "main.js": "/static/js/main.7639f235.js",
+    "main.css": "/static/css/main.799d07a4.css",
+    "main.js": "/static/js/main.114a7b64.js",
     "static/js/453.850abfa8.chunk.js": "/static/js/453.850abfa8.chunk.js",
+    "static/media/logopapa.png": "/static/media/logopapa.ceced156ab1dd57075ab.png",
     "index.html": "/index.html",
-    "main.e9d4127c.css.map": "/static/css/main.e9d4127c.css.map",
-    "main.7639f235.js.map": "/static/js/main.7639f235.js.map",
+    "main.799d07a4.css.map": "/static/css/main.799d07a4.css.map",
+    "main.114a7b64.js.map": "/static/js/main.114a7b64.js.map",
     "453.850abfa8.chunk.js.map": "/static/js/453.850abfa8.chunk.js.map"
   },
   "entrypoints": [
-    "static/css/main.e9d4127c.css",
-    "static/js/main.7639f235.js"
+    "static/css/main.799d07a4.css",
+    "static/js/main.114a7b64.js"
   ]
 }
