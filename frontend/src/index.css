@@ -1,0 +1,93 @@
+/* Stili globali per l'applicazione */
+
+body {
+  margin: 0;
+  font-family: 'Open Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  color: #333;
+  line-height: 1.6;
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 700;
+  margin-top: 0;
+}
+
+a {
+  color: #1a3c6c;
+  text-decoration: none;
+  transition: all 0.3s ease;
+}
+
+a:hover {
+  color: #ffa500;
+}
+
+.btn {
+  border-radius: 4px;
+  padding: 10px 25px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.btn-primary {
+  background-color: #1a3c6c;
+  border-color: #1a3c6c;
+}
+
+.btn-primary:hover,
+.btn-primary:focus,
+.btn-primary:active {
+  background-color: #152f53 !important;
+  border-color: #152f53 !important;
+}
+
+.btn-secondary {
+  background-color: #ffa500;
+  border-color: #ffa500;
+}
+
+.btn-secondary:hover,
+.btn-secondary:focus,
+.btn-secondary:active {
+  background-color: #e69500 !important;
+  border-color: #e69500 !important;
+}
+
+.btn-outline-primary {
+  color: #1a3c6c;
+  border-color: #1a3c6c;
+}
+
+.btn-outline-primary:hover,
+.btn-outline-primary:focus,
+.btn-outline-primary:active {
+  background-color: #1a3c6c !important;
+  border-color: #1a3c6c !important;
+  color: #fff !important;
+}
+
+.section-padding {
+  padding: 100px 0;
+}
+
+@media (max-width: 991.98px) {
+  .section-padding {
+    padding: 70px 0;
+  }
+}
+
+@media (max-width: 767.98px) {
+  .section-padding {
+    padding: 50px 0;
+  }
+}

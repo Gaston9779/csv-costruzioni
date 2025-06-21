@@ -1,0 +1,9 @@
+<svg width="400" height="500" viewBox="0 0 400 500" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="400" height="500" fill="#F5F5F5"/>
+  <rect x="50" y="50" width="300" height="300" rx="150" fill="#1A3C6C"/>
+  <circle cx="200" cy="150" r="50" fill="#FFFFFF"/>
+  <path d="M200 220C244.183 220 280 255.817 280 300C280 344.183 244.183 380 200 380C155.817 380 120 344.183 120 300C120 255.817 155.817 220 200 220Z" fill="#FFFFFF"/>
+  <rect x="50" y="400" width="300" height="50" rx="8" fill="#1A3C6C"/>
+  <text x="200" y="430" font-family="Montserrat" font-weight="700" font-size="18" fill="#FFFFFF" text-anchor="middle">Giulia Verdi</text>
+  <text x="200" y="480" font-family="Open Sans" font-weight="400" font-size="14" fill="#666666" text-anchor="middle">Architetto Senior</text>
+</svg>

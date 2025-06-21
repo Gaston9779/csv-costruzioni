@@ -1,0 +1,31 @@
+<svg width="800" height="600" viewBox="0 0 800 600" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="800" height="600" fill="#F5F5F5"/>
+  <rect x="50" y="50" width="700" height="500" rx="8" fill="#FFFFFF" stroke="#1A3C6C" stroke-width="2"/>
+  
+  <!-- Timeline -->
+  <line x1="150" y1="100" x2="150" y2="500" stroke="#1A3C6C" stroke-width="4"/>
+  
+  <!-- Timeline points -->
+  <circle cx="150" cy="150" r="20" fill="#1A3C6C"/>
+  <text x="150" y="155" font-family="Montserrat" font-weight="700" font-size="14" fill="#FFFFFF" text-anchor="middle">1990</text>
+  <text x="250" y="150" font-family="Montserrat" font-weight="700" font-size="18" fill="#1A3C6C">Fondazione</text>
+  
+  <circle cx="150" cy="250" r="20" fill="#1A3C6C"/>
+  <text x="150" y="255" font-family="Montserrat" font-weight="700" font-size="14" fill="#FFFFFF" text-anchor="middle">2000</text>
+  <text x="250" y="250" font-family="Montserrat" font-weight="700" font-size="18" fill="#1A3C6C">Espansione</text>
+  
+  <circle cx="150" cy="350" r="20" fill="#1A3C6C"/>
+  <text x="150" y="355" font-family="Montserrat" font-weight="700" font-size="14" fill="#FFFFFF" text-anchor="middle">2010</text>
+  <text x="250" y="350" font-family="Montserrat" font-weight="700" font-size="18" fill="#1A3C6C">Innovazione</text>
+  
+  <circle cx="150" cy="450" r="20" fill="#1A3C6C"/>
+  <text x="150" y="455" font-family="Montserrat" font-weight="700" font-size="14" fill="#FFFFFF" text-anchor="middle">2020</text>
+  <text x="250" y="450" font-family="Montserrat" font-weight="700" font-size="18" fill="#1A3C6C">Oggi</text>
+  
+  <!-- Decorative elements -->
+  <path d="M600 100L700 200" stroke="#FFA500" stroke-width="3" stroke-linecap="round"/>
+  <path d="M600 200L700 100" stroke="#FFA500" stroke-width="3" stroke-linecap="round"/>
+  
+  <path d="M600 300L700 400" stroke="#FFA500" stroke-width="3" stroke-linecap="round"/>
+  <path d="M600 400L700 300" stroke="#FFA500" stroke-width="3" stroke-linecap="round"/>
+</svg>

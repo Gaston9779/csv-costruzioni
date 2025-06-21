@@ -1,0 +1,8 @@
+<svg width="1920" height="600" viewBox="0 0 1920 600" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1920" height="600" fill="#1A3C6C"/>
+  <path d="M0 450L1920 300V600H0V450Z" fill="#FFA500" fill-opacity="0.2"/>
+  <path d="M1920 150L0 300V0H1920V150Z" fill="#FFA500" fill-opacity="0.1"/>
+  <rect x="710" y="200" width="500" height="200" rx="10" fill="#FFFFFF" fill-opacity="0.1"/>
+  <text x="960" y="300" font-family="Montserrat" font-weight="700" font-size="36" fill="#FFFFFF" text-anchor="middle">VUOI LAVORARE CON NOI?</text>
+  <text x="960" y="350" font-family="Open Sans" font-weight="400" font-size="18" fill="#FFFFFF" text-anchor="middle">Invia il tuo curriculum e scopri le opportunitu00e0</text>
+</svg>

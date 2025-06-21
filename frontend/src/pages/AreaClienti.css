@@ -1,0 +1,156 @@
+/* AreaClienti.css - Stili per l'area clienti */
+
+.area-clienti-header {
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba%2844, 62, 80, 1%29' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
+}
+
+.login-section {
+  padding: 5rem 0;
+  background-color: var(--light-color);
+}
+
+.login-card {
+  background-color: var(--white-color);
+  border-radius: var(--border-radius);
+  box-shadow: var(--box-shadow);
+  padding: 2.5rem;
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+.login-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.login-header h2 {
+  color: var(--primary-color);
+  margin-bottom: 1rem;
+}
+
+.login-form .form-group {
+  margin-bottom: 1.5rem;
+}
+
+.login-form .form-control {
+  height: 50px;
+  border-radius: var(--border-radius);
+  border: 1px solid var(--light-gray-color);
+  padding: 0.75rem 1rem;
+  font-size: 1rem;
+}
+
+.login-form .form-control:focus {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 0.25rem rgba(26, 60, 108, 0.25);
+}
+
+.login-form .btn {
+  width: 100%;
+  padding: 0.75rem;
+  font-weight: 600;
+}
+
+.forgot-password {
+  display: block;
+  text-align: center;
+  margin-top: 1.5rem;
+  color: var(--gray-color);
+  transition: var(--transition);
+}
+
+.forgot-password:hover {
+  color: var(--primary-color);
+}
+
+/* Dashboard styles */
+.dashboard-section {
+  padding: 5rem 0;
+}
+
+.dashboard-card {
+  background-color: var(--white-color);
+  border-radius: var(--border-radius);
+  box-shadow: var(--box-shadow);
+  padding: 1.5rem;
+  height: 100%;
+  margin-bottom: 1.5rem;
+}
+
+.dashboard-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--light-gray-color);
+}
+
+.dashboard-title {
+  font-size: 1.5rem;
+  color: var(--primary-color);
+  margin-bottom: 0;
+}
+
+.dashboard-icon {
+  font-size: 1.8rem;
+  color: var(--primary-color);
+  background-color: rgba(26, 60, 108, 0.1);
+  padding: 0.75rem;
+  border-radius: 50%;
+}
+
+.project-table, .document-table {
+  width: 100%;
+}
+
+.project-table th, .document-table th {
+  color: var(--primary-color);
+  font-weight: 600;
+  padding: 0.75rem 1rem;
+}
+
+.project-table td, .document-table td {
+  padding: 0.75rem 1rem;
+  vertical-align: middle;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 0.35rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.status-in-corso {
+  background-color: rgba(13, 110, 253, 0.1);
+  color: #0d6efd;
+}
+
+.status-completato {
+  background-color: rgba(25, 135, 84, 0.1);
+  color: #198754;
+}
+
+.status-in-approvazione {
+  background-color: rgba(255, 193, 7, 0.1);
+  color: #ffc107;
+}
+
+/* Media queries */
+@media (max-width: 991.98px) {
+  .dashboard-card {
+    margin-bottom: 1.5rem;
+  }
+}
+
+@media (max-width: 767.98px) {
+  .login-card {
+    padding: 2rem;
+  }
+  
+  .dashboard-table-responsive {
+    overflow-x: auto;
+  }
+}

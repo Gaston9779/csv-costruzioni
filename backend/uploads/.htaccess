@@ -1,0 +1,16 @@
+
+# Permetti l'accesso a tutti i file
+<IfModule mod_authz_core.c>
+    Require all granted
+</IfModule>
+
+# Permetti l'accesso a tutti i file (Apache 2.2)
+<IfModule !mod_authz_core.c>
+    Order allow,deny
+    Allow from all
+</IfModule>
+
+# Abilita CORS
+<IfModule mod_headers.c>
+    Header set Access-Control-Allow-Origin "*"
+</IfModule>

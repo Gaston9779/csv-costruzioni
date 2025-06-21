@@ -1,0 +1,7 @@
+<svg width="1920" height="400" viewBox="0 0 1920 400" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1920" height="400" fill="#1A3C6C"/>
+  <path d="M0 300L1920 200V400H0V300Z" fill="#FFA500" fill-opacity="0.2"/>
+  <path d="M1920 100L0 200V0H1920V100Z" fill="#FFA500" fill-opacity="0.1"/>
+  <text x="960" y="200" font-family="Montserrat" font-weight="700" font-size="48" fill="#FFFFFF" text-anchor="middle">CHI SIAMO</text>
+  <text x="960" y="250" font-family="Open Sans" font-weight="400" font-size="20" fill="#FFFFFF" text-anchor="middle">La nostra storia, i nostri valori, il nostro team</text>
+</svg>

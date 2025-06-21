@@ -1,0 +1,109 @@
+/* Buttons.css - Stili migliorati per i bottoni */
+
+.btn {
+  border-radius: 4px;
+  padding: 12px 28px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+  z-index: 1;
+}
+
+/* Bottone primario con effetto hover da sinistra a destra */
+.btn-primary {
+  background-color: #1a3c6c;
+  border-color: #1a3c6c;
+  color: #fff;
+}
+
+.btn-primary:before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background-color: #ffa500;
+  transition: all 0.4s ease;
+  z-index: -1;
+}
+
+.btn-primary:hover:before,
+.btn-primary:focus:before {
+  left: 0;
+}
+
+.btn-primary:hover,
+.btn-primary:focus,
+.btn-primary:active {
+  background-color: #1a3c6c;
+  border-color: #1a3c6c;
+  color: #fff;
+  transform: translateY(-3px);
+  box-shadow: 0 6px 15px rgba(26, 60, 108, 0.3);
+}
+
+/* Bottone secondario con effetto hover */
+.btn-secondary {
+  background-color: #ffa500;
+  border-color: #ffa500;
+  color: #fff;
+}
+
+.btn-secondary:before {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: -100%;
+  width: 100%;
+  height: 100%;
+  background-color: #1a3c6c;
+  transition: all 0.4s ease;
+  z-index: -1;
+}
+
+.btn-secondary:hover:before,
+.btn-secondary:focus:before {
+  right: 0;
+}
+
+.btn-secondary:hover,
+.btn-secondary:focus,
+.btn-secondary:active {
+  background-color: #ffa500;
+  border-color: #ffa500;
+  color: #fff;
+  transform: translateY(-3px);
+  box-shadow: 0 6px 15px rgba(255, 165, 0, 0.3);
+}
+
+/* Bottone outline con effetto hover */
+.btn-outline-primary {
+  background-color: transparent;
+  color: #1a3c6c;
+  border: 2px solid #1a3c6c;
+}
+
+.btn-outline-primary:hover,
+.btn-outline-primary:focus,
+.btn-outline-primary:active {
+  background-color: #1a3c6c !important;
+  border-color: #1a3c6c !important;
+  color: #fff !important;
+  transform: translateY(-3px);
+  box-shadow: 0 6px 15px rgba(26, 60, 108, 0.3);
+}
+
+/* Bottone per "Scopri di più" nelle card dei servizi */
+.service-card .btn {
+  padding: 10px 20px;
+  transition: all 0.3s ease;
+}
+
+.service-card .btn:hover,
+.service-card .btn:focus {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 15px rgba(26, 60, 108, 0.3);
+}

@@ -1,0 +1,6 @@
+<svg width="200" height="60" viewBox="0 0 200 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="60" height="60" rx="8" fill="#1A3C6C"/>
+  <path d="M15 15L45 45M15 45L45 15" stroke="#FFA500" stroke-width="5" stroke-linecap="round"/>
+  <text x="70" y="35" font-family="Montserrat" font-weight="700" font-size="22" fill="#1A3C6C">COSTRUZIONI</text>
+  <text x="70" y="55" font-family="Montserrat" font-weight="700" font-size="22" fill="#1A3C6C">VIOLA</text>
+</svg>

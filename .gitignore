@@ -1,0 +1,8 @@
+# Ignora tutte le cartelle node_modules
+node_modules/
+frontend/node_modules/
+
+# Ignora la cache (sia frontend che backend, ovunque si trovi)
+.cache/
+frontend/.cache/
+frontend/node_modules/.cache/

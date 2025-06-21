@@ -1,0 +1,7 @@
+<svg width="1920" height="800" viewBox="0 0 1920 800" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1920" height="800" fill="#1A3C6C"/>
+  <path d="M0 600L1920 400V800H0V600Z" fill="#FFA500" fill-opacity="0.2"/>
+  <path d="M1920 200L0 400V0H1920V200Z" fill="#FFA500" fill-opacity="0.1"/>
+  <text x="960" y="400" font-family="Montserrat" font-weight="700" font-size="48" fill="#FFFFFF" text-anchor="middle">CSV</text>
+  <text x="960" y="470" font-family="Open Sans" font-weight="400" font-size="24" fill="#FFFFFF" text-anchor="middle">Qualità e Innovazione dal 1990</text>
+</svg>

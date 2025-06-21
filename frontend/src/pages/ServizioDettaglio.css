@@ -1,0 +1,340 @@
+/* Stili per le pagine di dettaglio dei servizi */
+
+/* Service Overview Section */
+.service-overview {
+  padding: 80px 0;
+  background-color: #ffffff;
+}
+
+.service-image {
+  position: relative;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+}
+
+.service-image img {
+  width: 100%;
+  height: 400px;
+  object-fit: cover;
+}
+
+.service-content h2 {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #1a3c6c;
+  margin-bottom: 20px;
+  position: relative;
+  padding-bottom: 15px;
+}
+
+.service-content h2::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 70px;
+  height: 3px;
+  background-color: #ffa500;
+}
+
+.service-content .lead {
+  font-size: 1.2rem;
+  color: #555;
+  margin-bottom: 25px;
+  font-weight: 500;
+}
+
+.service-content p {
+  font-size: 1rem;
+  line-height: 1.7;
+  color: #666;
+  margin-bottom: 20px;
+}
+
+/* Grid di caratteristiche del servizio - Nuovo stile senza pallini */
+.service-features-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 15px;
+  margin: 30px 0;
+}
+
+.service-feature-item {
+  background-color: #f8f9fa;
+  padding: 12px 15px;
+  border-left: 3px solid #1a3c6c;
+  font-weight: 500;
+  color: #333;
+  transition: all 0.3s ease;
+}
+
+.service-feature-item:hover {
+  background-color: #e9ecef;
+  transform: translateX(3px);
+}
+
+/* Process Section */
+.process-section {
+  padding: 80px 0;
+  background-color: #f8f9fa;
+}
+
+.section-header {
+  margin-bottom: 60px;
+}
+
+.section-header h2 {
+  font-size: 2.2rem;
+  font-weight: 700;
+  color: #1a3c6c;
+  margin-bottom: 15px;
+  position: relative;
+  padding-bottom: 15px;
+}
+
+.section-header h2::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 70px;
+  height: 3px;
+  background-color: #ffa500;
+}
+
+.section-header p {
+  font-size: 1.1rem;
+  color: #666;
+  margin: 0;
+}
+
+.process-timeline {
+  position: relative;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+/* Processo senza cerchi numerati */
+.process-step {
+  background-color: #fff;
+  padding: 25px;
+  margin-bottom: 30px;
+  border-radius: 8px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+  border-left: 4px solid #1a3c6c;
+  position: relative;
+}
+
+.process-step::before {
+  content: attr(data-step);
+  position: absolute;
+  left: -20px;
+  top: 50%;
+  transform: translateY(-50%);
+  background-color: #1a3c6c;
+  color: #fff;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 5px;
+  font-weight: 700;
+}
+
+.step-content h3 {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #1a3c6c;
+  margin-bottom: 10px;
+}
+
+.step-content p {
+  font-size: 1rem;
+  color: #666;
+  margin: 0;
+  line-height: 1.6;
+}
+
+/* Related Projects Section */
+.related-projects {
+  padding: 80px 0;
+  background-color: #ffffff;
+}
+
+.project-card {
+  border: none;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+  height: 100%;
+}
+
+.project-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.project-image {
+  position: relative;
+  overflow: hidden;
+}
+
+.project-image img {
+  width: 100%;
+  height: 250px;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.project-card:hover .project-image img {
+  transform: scale(1.05);
+}
+
+.project-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(26, 60, 108, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.project-card:hover .project-overlay {
+  opacity: 1;
+}
+
+.project-overlay .btn {
+  transform: translateY(20px);
+  transition: transform 0.3s ease;
+}
+
+.project-card:hover .project-overlay .btn {
+  transform: translateY(0);
+}
+
+.project-card .card-body {
+  padding: 25px;
+}
+
+.project-card .card-title {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #1a3c6c;
+  margin: 0;
+}
+
+/* CTA Section */
+.cta-section {
+  padding: 80px 0;
+  background: linear-gradient(135deg, #1a3c6c 0%, #2a4d7c 100%);
+  color: #ffffff;
+}
+
+.cta-content h2 {
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin-bottom: 20px;
+}
+
+.cta-content p {
+  font-size: 1.2rem;
+  margin-bottom: 40px;
+  opacity: 0.9;
+}
+
+.cta-buttons .btn {
+  padding: 12px 30px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  border-radius: 6px;
+  transition: all 0.3s ease;
+}
+
+.cta-buttons .btn-primary {
+  background-color: #ffa500;
+  border-color: #ffa500;
+}
+
+.cta-buttons .btn-primary:hover {
+  background-color: #e6940a;
+  border-color: #e6940a;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(255, 165, 0, 0.3);
+}
+
+.cta-buttons .btn-outline-light:hover {
+  background-color: #ffffff;
+  color: #1a3c6c;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(255, 255, 255, 0.2);
+}
+
+/* Responsive Design */
+@media (max-width: 991.98px) {
+  .service-content h2 {
+    font-size: 2.2rem;
+  }
+  
+  .section-header h2 {
+    font-size: 2rem;
+  }
+  
+  .cta-content h2 {
+    font-size: 2.2rem;
+  }
+  
+  .service-features-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 767.98px) {
+  .service-overview {
+    padding: 60px 0;
+  }
+  
+  .process-section,
+  .related-projects,
+  .cta-section {
+    padding: 60px 0;
+  }
+  
+  .service-content h2 {
+    font-size: 2rem;
+  }
+  
+  .section-header h2 {
+    font-size: 1.8rem;
+  }
+  
+  .cta-content h2 {
+    font-size: 2rem;
+  }
+  
+  .cta-content p {
+    font-size: 1.1rem;
+  }
+  
+  .cta-buttons .btn {
+    display: block;
+    width: 100%;
+    margin-bottom: 15px;
+  }
+  
+  .service-image img {
+    height: 300px;
+  }
+  
+  .project-image img {
+    height: 200px;
+  }
+}
