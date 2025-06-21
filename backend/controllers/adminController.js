@@ -1,4 +1,4 @@
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcryptjs');
 const Client = require('../models/Client');
 const Document = require('../models/Document');
 const Project = require('../models/Project');

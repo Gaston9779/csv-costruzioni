@@ -58,7 +58,7 @@ const AreaClienti = () => {
   // Verifica validità token
   const verifyToken = async (token) => {
     try {
-      const response = await fetch('http://localhost:5000/api/auth/verify', {
+      const response = await fetch('https://csv-backend-yg2x.onrender.com/api/auth/verify', {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -79,7 +79,7 @@ const AreaClienti = () => {
     setDataLoading(prev => ({ ...prev, projects: true }));
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:5000/api/client/projects', {
+      const response = await fetch('https://csv-backend-yg2x.onrender.com/api/client/projects', {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -104,7 +104,7 @@ const AreaClienti = () => {
     setDataLoading(prev => ({ ...prev, documents: true }));
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:5000/api/client/documents', {
+      const response = await fetch('https://csv-backend-yg2x.onrender.com/api/client/documents', {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -130,7 +130,7 @@ const AreaClienti = () => {
     setLoginError('');
 
     try {
-      const response = await fetch('http://localhost:5000/api/auth/login', {
+      const response = await fetch('https://csv-backend-yg2x.onrender.com/api/auth/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

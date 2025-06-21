@@ -1,6 +1,7 @@
 # Ignora tutte le cartelle node_modules
 node_modules/
 frontend/node_modules/
+.env
 
 # Ignora la cache (sia frontend che backend, ovunque si trovi)
 .cache/

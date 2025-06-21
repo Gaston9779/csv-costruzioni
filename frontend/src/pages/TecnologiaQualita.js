@@ -268,7 +268,7 @@ const TecnologiaQualita = () => {
               <div className="quality-content">
                 <h3>Formazione e Aggiornamento</h3>
                 <p>
-                  Investiamo costantemente nella formazione del nostro personale per garantire che le competenze e le conoscenze siano sempre aggiornate alle ultime innovazioni del settore.
+                  Investiamo costantemente nella formazione del nostro personale, e delle ditte con le quali collaboriamo, per garantire che le competenze e le conoscenze siano sempre aggiornate alle ultime innovazioni del settore.
                 </p>
                 <ul className="quality-list">
                   <li>

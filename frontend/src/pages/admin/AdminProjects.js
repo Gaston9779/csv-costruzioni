@@ -105,7 +105,7 @@ const AdminProjects = ({ onStatsUpdate }) => {
 
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:5000/api/admin/projects', {
+      const response = await fetch('https://csv-backend-yg2x.onrender.com/api/admin/projects', {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -131,7 +131,7 @@ const AdminProjects = ({ onStatsUpdate }) => {
     try {
       console.log("Caricamento clienti in corso...");
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:5000/api/admin/clients', {
+      const response = await fetch('https://csv-backend-yg2x.onrender.com/api/admin/clients', {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -190,8 +190,8 @@ const AdminProjects = ({ onStatsUpdate }) => {
     try {
       const token = localStorage.getItem('token');
       const url = isEditing
-        ? `http://localhost:5000/api/admin/projects/${currentProject.projectId}`
-        : 'http://localhost:5000/api/admin/projects';
+        ? `https://csv-backend-yg2x.onrender.com/api/admin/projects/${currentProject.projectId}`
+        : 'https://csv-backend-yg2x.onrender.com/api/admin/projects';
 
       console.log("URL API:", url);
 
@@ -315,7 +315,7 @@ const AdminProjects = ({ onStatsUpdate }) => {
 
     try {
       const token = localStorage.getItem('token');
-      const url = `http://localhost:5000/api/admin/projects/${currentProject.projectId}`;
+      const url = `https://csv-backend-yg2x.onrender.com/api/admin/projects/${currentProject.projectId}`;
 
       console.log(`Eliminazione progetto: ${url}`);
       const response = await fetch(url, {

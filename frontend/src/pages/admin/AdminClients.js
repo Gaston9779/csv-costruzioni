@@ -77,7 +77,7 @@ const AdminClients = ({ onStatsUpdate }) => {
 
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:5000/api/admin/clients', {
+      const response = await fetch('https://csv-backend-yg2x.onrender.com/api/admin/clients', {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -125,8 +125,8 @@ const AdminClients = ({ onStatsUpdate }) => {
     try {
       const token = localStorage.getItem('token');
       const url = isEditing
-        ? `http://localhost:5000/api/admin/clients/${currentClient._id}`
-        : 'http://localhost:5000/api/admin/clients';
+        ? `https://csv-backend-yg2x.onrender.com/api/admin/clients/${currentClient._id}`
+        : 'https://csv-backend-yg2x.onrender.com/api/admin/clients';
 
       const method = isEditing ? 'PUT' : 'POST';
       console.log("Richiesta API:", method, url);
@@ -186,7 +186,7 @@ const AdminClients = ({ onStatsUpdate }) => {
 
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:5000/api/admin/clients/${currentClient._id}`, {
+      const response = await fetch(`https://csv-backend-yg2x.onrender.com/api/admin/clients/${currentClient._id}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`

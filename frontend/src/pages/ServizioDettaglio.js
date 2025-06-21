@@ -16,14 +16,21 @@ const ServizioDettaglio = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Recupera i progetti per la categoria corrente
+  // Recupera tutti i progetti pubblici e filtra per categoria
   useEffect(() => {
     const fetchProjects = async () => {
       try {
-        const response = await fetch(`${API_URL}/api/projects/public?category=${tipo}`);
+        setLoading(true);
+        // Recupera tutti i progetti pubblici
+        const response = await fetch(`${API_URL}/api/projects/public`);
         const data = await response.json();
+        
         if (data.success) {
-          setProjects(data.projects);
+          // Filtra i progetti per categoria
+          const filteredProjects = data.projects.filter(project => 
+            project.category && project.category.toLowerCase() === tipo.toLowerCase()
+          );
+          setProjects(filteredProjects);
         } else {
           setError('Errore nel caricamento dei progetti');
         }
@@ -159,9 +166,7 @@ const ServizioDettaglio = () => {
   };
 
   const servizio = serviziDatabase[tipo];
-  useEffect(() => {
-    console.log(servizio, 'servizio', projects);
-  }, [projects]);
+  
   if (!servizio) {
     return (
       <Container className="my-5 text-center">
@@ -172,8 +177,6 @@ const ServizioDettaglio = () => {
     );
   }
 
-
-  
   return (
     <>
       {/* Utilizzo del componente PageHeader comune */}

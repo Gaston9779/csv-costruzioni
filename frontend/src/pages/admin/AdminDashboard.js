@@ -65,27 +65,27 @@ const AdminDashboard = ({ user, onLogout }) => {
     try {
       const token = localStorage.getItem('token');
       
-      const clientsResponse = await fetch('http://localhost:5000/api/admin/clients/stats', {
+      const clientsResponse = await fetch('https://csv-backend-yg2x.onrender.com/api/admin/clients/stats', {
         headers: {
           'Authorization': `Bearer ${token}`
         }
       });
       
-      const projectsResponse = await fetch('http://localhost:5000/api/admin/projects/stats', {
+      const projectsResponse = await fetch('https://csv-backend-yg2x.onrender.com/api/admin/projects/stats', {
         headers: {
           'Authorization': `Bearer ${token}`
         }
       });
       
       // Recupera i progetti più recenti per le attività
-      const recentProjectsResponse = await fetch('http://localhost:5000/api/admin/projects?limit=5&sort=updatedAt', {
+      const recentProjectsResponse = await fetch('https://csv-backend-yg2x.onrender.com/api/admin/projects?limit=5&sort=updatedAt', {
         headers: {
           'Authorization': `Bearer ${token}`
         }
       });
 
       // Recupera i documenti più recenti e le statistiche sui documenti
-      const documentsResponse = await fetch('http://localhost:5000/api/admin/documents', {
+      const documentsResponse = await fetch('https://csv-backend-yg2x.onrender.com/api/admin/documents', {
         headers: {
           'Authorization': `Bearer ${token}`
         }

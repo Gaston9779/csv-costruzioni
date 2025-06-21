@@ -102,13 +102,13 @@ const ChiSiamo = () => {
   return (
     <>
       {/* Page Header */}
-      <PageHeader 
-        title="Chi Siamo" 
-        backgroundImage="https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80" 
+      <PageHeader
+        title="Chi Siamo"
+        backgroundImage="https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80"
       />
 
       {/* About Main Section */}
-      <section style={{marginTop:100}} className="about-main-section">
+      <section style={{ marginTop: 100 }} className="about-main-section">
         <Container>
           <Row className="align-items-center">
             <Col lg={6} className="mb-5 mb-lg-0">
@@ -118,7 +118,7 @@ const ChiSiamo = () => {
             </Col>
             <Col lg={6}>
               <div className="about-main-content">
-                <div style={{marginBottom:0}} className="section-header text-start">
+                <div style={{ marginBottom: 0 }} className="section-header text-start">
                   <h2>CSV</h2>
                 </div>
                 <p className="lead">
@@ -181,22 +181,26 @@ const ChiSiamo = () => {
                   <div className="timeline-item">
                     <div className="timeline-marker"></div>
                     <div className="timeline-content">
-                      <h4>1990</h4>
-                      <p>Fondazione dell'azienda con focus su progetti residenziali di piccole dimensioni.</p>
+                      <h4>1964</h4>
+                      <p>Nasce nel 1964 dalla grande forza di volontà del fondatore Viola Pio ,
+                        affiancato dalla moglie Zontini Adelia, che hanno sempre saputo
+                        interpretare in anticipo l&#39;evoluzione del mercato immobiliare coinvolgendo
+                        e trasmettendo lo stesso entusiasmo ai propri collaboratori, i quali hanno
+                        contribuito in modo significativo alla crescita dell&#39;azienda.</p>
+                    </div>
+                  </div>
+                  <div className="timeline-item">
+                    <div className="timeline-marker"></div>
+                    <div className="timeline-content">
+                      <h4>1987</h4>
+                      <p>I figli Graziano e Gianluca proseguono con l’attività.</p>
                     </div>
                   </div>
                   <div className="timeline-item">
                     <div className="timeline-marker"></div>
                     <div className="timeline-content">
                       <h4>2000</h4>
-                      <p>Espansione nel settore commerciale e direzionale con progetti di media entità.</p>
-                    </div>
-                  </div>
-                  <div className="timeline-item">
-                    <div className="timeline-marker"></div>
-                    <div className="timeline-content">
-                      <h4>2010</h4>
-                      <p>Implementazione di tecnologie eco-sostenibili e focus sull'efficienza energetica.</p>
+                      <p>CsV nasce per costruire edifici a basso consumo energetico.</p>
                     </div>
                   </div>
                   <div className="timeline-item">

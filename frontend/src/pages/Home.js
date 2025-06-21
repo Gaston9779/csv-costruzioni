@@ -104,7 +104,7 @@ const Home = () => {
       <section className="hero-section">
         <div className="hero-overlay"></div>
         <Container fluid className="hero-container">
-          <Row className="align-items-center">
+          <Row style={{paddingLeft:50, paddingRight:50}} className="align-items-center">
             <Col lg={6} className="hero-content">
               <div className="animate-on-scroll">
                 <h1>Costruiamo il Futuro</h1>

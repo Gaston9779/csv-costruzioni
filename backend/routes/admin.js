@@ -7,7 +7,7 @@ const Client = require('../models/Client');
 const Project = require('../models/Project');
 const mongoose = require('mongoose'); // Aggiungere questa riga per utilizzare mongoose.Types.ObjectId
 const Counter = require('../models/Counter');
-const bcrypt = require('bcrypt'); // Aggiungere questa riga per utilizzare bcrypt
+const bcrypt = require('bcryptjs'); // Aggiungere questa riga per utilizzare bcrypt
 
 // Middleware che verifica l'autenticazione e i privilegi di admin per tutte le rotte
 router.use(authenticateToken, isAdmin);

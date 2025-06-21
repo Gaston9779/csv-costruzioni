@@ -16,7 +16,7 @@ const Servizi = () => {
   useEffect(() => {
     const fetchProjects = async () => {
       try {
-        const response = await fetch('http://localhost:5000/api/projects/public');
+        const response = await fetch('https://csv-backend-yg2x.onrender.com/api/projects/public');
         const data = await response.json();
         
         if (data.success) {
