@@ -6,6 +6,9 @@ import { faMapMarkerAlt, faCalendarAlt, faExclamationTriangle } from '@fortaweso
 import PageHeader from '../components/common/PageHeader';
 import './Progetti.css';
 
+// API base URL
+const API_URL = 'https://csv-backend-yg2x.onrender.com';
+
 const Progetti = () => {
   // Stato per i progetti e filtri
   const [projects, setProjects] = useState([]);
@@ -18,7 +21,7 @@ const Progetti = () => {
     const fetchProjects = async () => {
       try {
         setLoading(true);
-        const response = await fetch('https://csv-backend-yg2x.onrender.com/api/projects/public');
+        const response = await fetch(`${API_URL}/api/projects/public`);
         const data = await response.json();
         
         if (data.success) {
@@ -143,17 +146,23 @@ const Progetti = () => {
               {progettiFiltered.map((project) => (
                 <Col lg={4} md={6} key={project._id} className="mb-4">
                   <Card className="project-card h-100">
-                    <div className="project-image" onClick={()=>{console.log(project.images[0].filename)}}>
+                    <div className="project-image">
                       {project.images && project.images.length > 0 ? (
                         <Card.Img 
                           variant="top" 
-                          src={`http://localhost:5000/uploads/${project.images[0].filename}`} 
+                          src={`${API_URL}/uploads/${project.images[0].filename}`} 
                           alt={project.title} 
+                          onError={(e) => {
+                            // Previene il loop infinito impostando onerror a null
+                            e.target.onerror = null;
+                            // Usa un'immagine locale o una base64 invece di un URL esterno
+                            e.target.src = "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgZmlsbD0iI2VlZWVlZSIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LWZhbWlseT0iQXJpYWwsIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMTQiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZpbGw9IiM5OTk5OTkiPkltbWFnaW5lIG5vbiBkaXNwb25pYmlsZTwvdGV4dD48L3N2Zz4=";
+                          }}
                         />
                       ) : (
                         <Card.Img 
                           variant="top" 
-                          src="https://via.placeholder.com/300x200?text=Immagine+non+disponibile" 
+                          src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgZmlsbD0iI2VlZWVlZSIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LWZhbWlseT0iQXJpYWwsIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMTQiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZpbGw9IiM5OTk5OTkiPkltbWFnaW5lIG5vbiBkaXNwb25pYmlsZTwvdGV4dD48L3N2Zz4=" 
                           alt={project.title} 
                         />
                       )}

@@ -20,11 +20,12 @@ const AreaClienti = () => {
   const [projects, setProjects] = useState([]);
   const [documents, setDocuments] = useState([]);
   const [invoices, setInvoices] = useState([]);
-  const [dataLoading, setDataLoading] = useState({
-    projects: false,
-    documents: false,
-    invoices: false
-  });
+  const [loading, setLoading] = useState(true);
+
+  // Logger per debug
+  useEffect(() => {
+    console.log('STATO LOADING:', loading);
+  }, [loading]);
 
   // Controlla se c'è un token salvato all'avvio
   useEffect(() => {
@@ -43,15 +44,49 @@ const AreaClienti = () => {
         handleLogout();
       }
     }
+
   }, []);
 
   // Carica i dati del cliente quando è loggato
   useEffect(() => {
     if (isLoggedIn && user?.role === 'client') {
-      fetchClientProjects();
-      fetchClientDocuments();
-      // Per ora non abbiamo API per le fatture, quindi inizializziamo con un array vuoto
-      setInvoices([]);
+      setLoading(true);
+      
+      // Carica progetti e documenti in parallelo
+      Promise.all([
+        fetch('https://csv-backend-yg2x.onrender.com/api/client/projects', {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          }
+        }).then(res => res.json()),
+        
+        fetch('https://csv-backend-yg2x.onrender.com/api/client/documents', {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          }
+        }).then(res => res.json())
+      ])
+      .then(([projectsData, documentsData]) => {
+        if (projectsData.success) {
+          setProjects(projectsData.projects);
+        }
+        
+        if (documentsData.success) {
+          setDocuments(documentsData.documents);
+        }
+        
+        // Inizializza fatture (vuote per ora)
+        setInvoices([]);
+      })
+      .catch(error => {
+        console.error("Errore nel caricamento dei dati:", error);
+      })
+      .finally(() => {
+        // Ritardo artificiale per essere sicuri che lo spinner sia visibile
+        setTimeout(() => {
+          setLoading(false);
+        }, 1000);
+      });
     }
   }, [isLoggedIn, user]);
 
@@ -71,56 +106,6 @@ const AreaClienti = () => {
       }
     } catch (error) {
       console.error('Errore nella verifica del token:', error);
-    }
-  };
-
-  // Recupera i progetti del cliente
-  const fetchClientProjects = async () => {
-    setDataLoading(prev => ({ ...prev, projects: true }));
-    try {
-      const token = localStorage.getItem('token');
-      const response = await fetch('https://csv-backend-yg2x.onrender.com/api/client/projects', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-
-      const data = await response.json();
-
-      if (data.success) {
-        setProjects(data.projects);
-      } else {
-        console.error('Errore nel recupero progetti:', data.message);
-      }
-    } catch (error) {
-      console.error('Errore durante il caricamento dei progetti:', error);
-    } finally {
-      setDataLoading(prev => ({ ...prev, projects: false }));
-    }
-  };
-
-  // Recupera i documenti del cliente
-  const fetchClientDocuments = async () => {
-    setDataLoading(prev => ({ ...prev, documents: true }));
-    try {
-      const token = localStorage.getItem('token');
-      const response = await fetch('https://csv-backend-yg2x.onrender.com/api/client/documents', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-
-      const data = await response.json();
-
-      if (data.success) {
-        setDocuments(data.documents);
-      } else {
-        console.error('Errore nel recupero documenti:', data.message);
-      }
-    } catch (error) {
-      console.error('Errore durante il caricamento dei documenti:', error);
-    } finally {
-      setDataLoading(prev => ({ ...prev, documents: false }));
     }
   };
 
@@ -198,8 +183,18 @@ const AreaClienti = () => {
     return <AdminDashboard user={user} onLogout={handleLogout} />;
   }
 
+
   // Se l'utente è loggato e non è admin, mostra l'area clienti normale
   if (isLoggedIn && user?.role === 'client') {
+    if (loading) {
+      return (
+        <div className="spinner-overlay">
+          <Spinner animation="border" variant="primary" style={{width: '80px', height: '80px'}} />
+          <h4 className="mt-3">Caricamento dati in corso...</h4>
+        </div>
+      );
+    }
+    
     return (
       <div className="area-clienti">
         <PageHeader
@@ -229,8 +224,8 @@ const AreaClienti = () => {
                 <Card.Body>
                   <p><strong>Nome:</strong> {user.name}</p>
                   <p><strong>Email:</strong> {user.email}</p>
-                  <p><strong>Ruolo:</strong> {user.role === 'client' ? 'Cliente'  : 'Admin'}</p>
-                
+                  <p><strong>Ruolo:</strong> {user.role === 'client' ? 'Cliente' : 'Admin'}</p>
+
                 </Card.Body>
               </Card>
             </Col>
@@ -281,13 +276,6 @@ const AreaClienti = () => {
                       </tbody>
                     </table>
                   </div>
-                  {dataLoading.projects && (
-                    <div className="text-center">
-                      <Spinner animation="border" role="status">
-                        <span className="visually-hidden">Caricamento in corso...</span>
-                      </Spinner>
-                    </div>
-                  )}
                 </Card.Body>
               </Card>
             </Col>
@@ -330,13 +318,6 @@ const AreaClienti = () => {
                       </tbody>
                     </table>
                   </div>
-                  {dataLoading.documents && (
-                    <div className="text-center">
-                      <Spinner animation="border" role="status">
-                        <span className="visually-hidden">Caricamento in corso...</span>
-                      </Spinner>
-                    </div>
-                  )}
                 </Card.Body>
               </Card>
             </Col>
@@ -376,13 +357,6 @@ const AreaClienti = () => {
                       </tbody>
                     </table>
                   </div>
-                  {dataLoading.invoices && (
-                    <div className="text-center">
-                      <Spinner animation="border" role="status">
-                        <span className="visually-hidden">Caricamento in corso...</span>
-                      </Spinner>
-                    </div>
-                  )}
                 </Card.Body>
               </Card>
             </Col>

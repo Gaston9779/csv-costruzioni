@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Row, Col, Card, Button, Nav, Tab, ProgressBar } from 'react-bootstrap';
+import { Container, Row, Col, Card, Button, Nav, Tab, ProgressBar, Spinner } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { 
-  faUsers, 
-  faProjectDiagram, 
-  faFileAlt, 
+import {
+  faUsers,
+  faProjectDiagram,
+  faFileAlt,
   faChartBar,
   faPlus,
   faCog,
@@ -19,6 +19,7 @@ import './AdminDashboard.css';
 
 const AdminDashboard = ({ user, onLogout }) => {
   const [activeTab, setActiveTab] = useState('dashboard');
+  const [loading, setLoading] = useState(false);
   const [stats, setStats] = useState({
     clients: 0,
     projects: 0,
@@ -45,7 +46,7 @@ const AdminDashboard = ({ user, onLogout }) => {
       if (window.AdminClientsRefresh && window.AdminClientsRefresh.fetchClients) {
         window.AdminClientsRefresh.fetchClients();
       }
-    } 
+    }
     // Quando si attiva la tab projects, aggiorniamo i progetti
     else if (activeTab === 'projects') {
       console.log('Tab projects attivata, aggiornamento dati...');
@@ -64,19 +65,19 @@ const AdminDashboard = ({ user, onLogout }) => {
   const fetchStats = async () => {
     try {
       const token = localStorage.getItem('token');
-      
+
       const clientsResponse = await fetch('https://csv-backend-yg2x.onrender.com/api/admin/clients/stats', {
         headers: {
           'Authorization': `Bearer ${token}`
         }
       });
-      
+
       const projectsResponse = await fetch('https://csv-backend-yg2x.onrender.com/api/admin/projects/stats', {
         headers: {
           'Authorization': `Bearer ${token}`
         }
       });
-      
+
       // Recupera i progetti più recenti per le attività
       const recentProjectsResponse = await fetch('https://csv-backend-yg2x.onrender.com/api/admin/projects?limit=5&sort=updatedAt', {
         headers: {
@@ -96,7 +97,7 @@ const AdminDashboard = ({ user, onLogout }) => {
         const projectsData = await projectsResponse.json();
         const recentProjectsData = await recentProjectsResponse.json();
         const documentsData = await documentsResponse.json();
-        
+
         // Calcola le statistiche sui tipi di documenti
         const documentsStats = {
           total: documentsData.documents?.length || 0,
@@ -104,10 +105,10 @@ const AdminDashboard = ({ user, onLogout }) => {
           images: documentsData.documents?.filter(doc => doc.fileType.includes('image')).length || 0,
           other: documentsData.documents?.filter(doc => !doc.fileType.includes('pdf') && !doc.fileType.includes('image')).length || 0
         };
-        
+
         // Creazione array di attività recenti
         const recentActivities = [];
-        
+
         // Aggiungi progetti recenti alle attività
         if (recentProjectsData.projects && recentProjectsData.projects.length > 0) {
           recentProjectsData.projects.forEach(project => {
@@ -120,7 +121,7 @@ const AdminDashboard = ({ user, onLogout }) => {
             });
           });
         }
-        
+
         // Aggiungi documenti recenti alle attività
         if (documentsData.documents && documentsData.documents.length > 0) {
           documentsData.documents.slice(0, 3).forEach(doc => {
@@ -133,10 +134,10 @@ const AdminDashboard = ({ user, onLogout }) => {
             });
           });
         }
-        
+
         // Ordina per data (più recente prima)
         recentActivities.sort((a, b) => new Date(b.date) - new Date(a.date));
-        
+
         setStats({
           clients: clientsData.stats?.total || 0,
           projects: projectsData.stats?.total || 0,
@@ -145,11 +146,15 @@ const AdminDashboard = ({ user, onLogout }) => {
           documentsStats,
           recentActivities: recentActivities.slice(0, 5) // Limita a 5 attività
         });
+        setLoading(true)
       }
     } catch (error) {
       console.error('Errore nel caricamento statistiche:', error);
     }
   };
+
+
+
 
   const StatCard = ({ title, value, icon, color = 'primary' }) => (
     <Card className="stat-card h-100">
@@ -166,7 +171,23 @@ const AdminDashboard = ({ user, onLogout }) => {
   );
 
   return (
-    <div style={{marginTop:120}} className="admin-dashboard">
+    <div style={{ marginTop: 120 }} className="admin-dashboard">
+      {!loading ? (
+        <div style={{
+          backgroundColor: 'black',
+          width: '100%',
+          height: '100vh',
+          opacity: 0.4,
+          position: 'fixed',
+          zIndex: 10,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center'
+        }}>
+          <div className="spinner"></div>
+        </div>
+      ) : null}
+
       {/* Header */}
       <div className="admin-header">
         <Container fluid>
@@ -266,15 +287,15 @@ const AdminDashboard = ({ user, onLogout }) => {
                         </Card.Header>
                         <Card.Body>
                           <div className="d-grid gap-2">
-                            <Button 
-                              variant="primary" 
+                            <Button
+                              variant="primary"
                               onClick={() => setActiveTab('clients')}
                             >
                               <FontAwesomeIcon icon={faPlus} className="me-2" />
                               Nuovo Cliente
                             </Button>
-                            <Button 
-                              variant="success" 
+                            <Button
+                              variant="success"
                               onClick={() => setActiveTab('projects')}
                             >
                               <FontAwesomeIcon icon={faPlus} className="me-2" />
@@ -298,11 +319,10 @@ const AdminDashboard = ({ user, onLogout }) => {
                                     <div>
                                       <strong>{activity.title}</strong>
                                       {activity.type === 'project' && (
-                                        <span className={`ms-2 badge ${
-                                          activity.status === 'Completato' ? 'bg-success' :
-                                          activity.status === 'In corso' ? 'bg-primary' : 
-                                          'bg-secondary'
-                                        }`}>
+                                        <span className={`ms-2 badge ${activity.status === 'Completato' ? 'bg-success' :
+                                          activity.status === 'In corso' ? 'bg-primary' :
+                                            'bg-secondary'
+                                          }`}>
                                           {activity.status}
                                         </span>
                                       )}
@@ -346,10 +366,10 @@ const AdminDashboard = ({ user, onLogout }) => {
                                 </div>
                                 <span>{stats.documentsStats.pdf} ({stats.documents > 0 ? Math.round((stats.documentsStats.pdf / stats.documents) * 100) : 0}%)</span>
                               </div>
-                              <ProgressBar 
-                                variant="danger" 
-                                now={stats.documents > 0 ? (stats.documentsStats.pdf / stats.documents) * 100 : 0} 
-                                className="mb-3" 
+                              <ProgressBar
+                                variant="danger"
+                                now={stats.documents > 0 ? (stats.documentsStats.pdf / stats.documents) * 100 : 0}
+                                className="mb-3"
                               />
 
                               <div className="d-flex justify-content-between mb-2">
@@ -359,10 +379,10 @@ const AdminDashboard = ({ user, onLogout }) => {
                                 </div>
                                 <span>{stats.documentsStats.images} ({stats.documents > 0 ? Math.round((stats.documentsStats.images / stats.documents) * 100) : 0}%)</span>
                               </div>
-                              <ProgressBar 
-                                variant="primary" 
-                                now={stats.documents > 0 ? (stats.documentsStats.images / stats.documents) * 100 : 0} 
-                                className="mb-3" 
+                              <ProgressBar
+                                variant="primary"
+                                now={stats.documents > 0 ? (stats.documentsStats.images / stats.documents) * 100 : 0}
+                                className="mb-3"
                               />
 
                               <div className="d-flex justify-content-between mb-2">
@@ -372,9 +392,9 @@ const AdminDashboard = ({ user, onLogout }) => {
                                 </div>
                                 <span>{stats.documentsStats.other} ({stats.documents > 0 ? Math.round((stats.documentsStats.other / stats.documents) * 100) : 0}%)</span>
                               </div>
-                              <ProgressBar 
-                                variant="secondary" 
-                                now={stats.documents > 0 ? (stats.documentsStats.other / stats.documents) * 100 : 0} 
+                              <ProgressBar
+                                variant="secondary"
+                                now={stats.documents > 0 ? (stats.documentsStats.other / stats.documents) * 100 : 0}
                               />
                             </>
                           )}

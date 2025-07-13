@@ -1,363 +1,384 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { Container, Row, Col, Badge, Button, Card } from 'react-bootstrap';
+import { Container, Row, Col, Card, Badge, Button, Tab, Tabs, Spinner, Image, Table } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import PageHeader from '../components/common/PageHeader';
-import './ProgettoDettaglio.css';
+import { faMapMarkerAlt, faCalendar, faBuilding, faTags, faClock, faEuroSign, faBed, faBath, faRulerCombined } from '@fortawesome/free-solid-svg-icons';
+import Header from '../components/layout/Header';
+import Footer from '../components/layout/Footer';
+
+const API_URL = 'https://csv-backend-yg2x.onrender.com';
 
 const ProgettoDettaglio = () => {
-  const { slug } = useParams();
-  const [progetto, setProgetto] = useState(null);
+  const { id } = useParams();
+  const [project, setProject] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [progettiCorrelati, setProgettiCorrelati] = useState([]);
-
-  // Database dei progetti (in un'app reale questo verrebbe da un'API o CMS)
-  const progetti = [
-    {
-      id: 1,
-      title: 'Villa Moderna a Milano',
-      slug: 'villa-moderna-milano',
-      categoria: 'residenziale',
-      anno: '2022',
-      cliente: 'Famiglia Rossi',
-      location: 'Milano, Italia',
-      image: 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80',
-      galleryImages: [
-        'https://images.unsplash.com/photo-1512915922686-57c11dde9b6b?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80',
-        'https://images.unsplash.com/photo-1513584684374-8bab748fbf90?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80',
-        'https://images.unsplash.com/photo-1502005229762-cf1b2da7c5d6?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80',
-      ],
-      descrizioneBreve: 'Villa moderna con design minimalista e soluzioni energetiche all\'avanguardia.',
-      descrizioneCompleta: 'Questa villa moderna situata in una zona residenziale di Milano rappresenta un perfetto esempio di architettura contemporanea. Il progetto ha richiesto particolare attenzione all\'efficienza energetica e alla sostenibilità, con l\'installazione di pannelli solari, sistemi di recupero dell\'acqua piovana e materiali eco-sostenibili. Gli interni sono caratterizzati da ampi spazi aperti, grandi vetrate che massimizzano la luce naturale e un design minimalista che enfatizza la funzionalità senza sacrificare l\'estetica.',
-      caratteristiche: [
-        'Superficie: 350 mq',
-        'Classe energetica: A4',
-        'Giardino privato di 500 mq',
-        'Piscina a sfioro',
-        'Domotica integrata',
-        'Sistema di riscaldamento a pavimento',
-        'Impianto fotovoltaico da 6 kW'
-      ],
-      sfide: 'La principale sfida di questo progetto è stata l\'integrazione di tecnologie sostenibili in un design architettonico moderno e minimalista, mantenendo al contempo un elevato livello di comfort abitativo. La conformazione del terreno ha richiesto soluzioni ingegneristiche innovative per massimizzare l\'esposizione solare e la vista panoramica.',
-      soluzioni: 'Abbiamo adottato un approccio integrato, collaborando strettamente con esperti di efficienza energetica fin dalle prime fasi di progettazione. La struttura è stata orientata per massimizzare l\'esposizione solare, con ampie vetrate a sud protette da sistemi di ombreggiatura automatizzati. I materiali sono stati selezionati per le loro proprietà isolanti e la loro sostenibilità ambientale.'
-    },
-    {
-      id: 2,
-      title: 'Complesso Residenziale Roma',
-      slug: 'complesso-residenziale-roma',
-      categoria: 'residenziale',
-      anno: '2021',
-      cliente: 'Immobiliare Aurora',
-      location: 'Roma, Italia',
-      image: 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80',
-      galleryImages: [
-        'https://images.unsplash.com/photo-1460317442991-856f4ea42174?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80',
-        'https://images.unsplash.com/photo-1503174971373-b6d6ba609f9c?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80',
-        'https://images.unsplash.com/photo-1560448204-603b3fc33ddc?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80',
-      ],
-      descrizioneBreve: 'Complesso di 30 appartamenti con aree comuni e giardini pensili.',
-      descrizioneCompleta: 'Il complesso residenziale situato nella periferia di Roma è composto da 30 unità abitative di varie metrature, dal monolocale all\'appartamento con quattro camere. Il progetto si distingue per l\'attenzione agli spazi comuni, con un ampio giardino centrale, aree gioco per bambini e una zona fitness condivisa. Particolare attenzione è stata dedicata alla sostenibilità, con l\'implementazione di sistemi di raccolta dell\'acqua piovana, pannelli solari e materiali a basso impatto ambientale.',
-      caratteristiche: [
-        'Superficie totale: 5.000 mq',
-        '30 unità abitative di diverse metrature',
-        'Classe energetica: A',
-        'Giardino comune di 1.000 mq',
-        'Area fitness condivisa',
-        'Parcheggio sotterraneo',
-        'Sistemi di sicurezza integrati'
-      ],
-      sfide: 'La sfida principale è stata quella di creare un complesso residenziale che offrisse privacy e comfort ai residenti, mantenendo al contempo un forte senso di comunità. Inoltre, il progetto doveva rispettare rigorosi standard di efficienza energetica e sostenibilità ambientale.',
-      soluzioni: 'Abbiamo progettato il complesso attorno a un giardino centrale che funge da cuore della comunità, con percorsi pedonali che collegano le diverse aree comuni. Ogni appartamento è stato progettato per massimizzare la privacy e l\'esposizione solare, con balconi e terrazze che si affacciano sugli spazi verdi. L\'utilizzo di materiali fonoassorbenti ha garantito un elevato comfort acustico.'
-    },
-    {
-      id: 3,
-      title: 'Uffici Direzionali Milano',
-      slug: 'uffici-direzionali-milano',
-      categoria: 'commerciale',
-      anno: '2023',
-      cliente: 'Tech Solutions SpA',
-      location: 'Milano, Italia',
-      image: 'https://images.unsplash.com/photo-1497366811353-6870744d04b2?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80',
-      galleryImages: [
-        'https://images.unsplash.com/photo-1497215728101-856f4ea42174?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80',
-        'https://images.unsplash.com/photo-1577760258779-dbb63a35d8cc?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80',
-        'https://images.unsplash.com/photo-1604328698692-f76ea9498e76?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80',
-      ],
-      descrizioneBreve: 'Uffici direzionali con design innovativo e tecnologie avanzate.',
-      descrizioneCompleta: 'Il progetto di uffici direzionali per Tech Solutions SpA a Milano rappresenta un esempio di come l\'innovazione e la tecnologia possano essere integrate in un ambiente di lavoro. Il design degli spazi è stato pensato per favorire la collaborazione e la creatività, con aree comuni e spazi di lavoro flessibili. La struttura è stata progettata per massimizzare l\'esposizione solare e la vista panoramica sulla città.',
-      caratteristiche: [
-        'Superficie: 2.500 mq',
-        '3 piani di uffici',
-        'Sala riunioni con tecnologie avanzate',
-        'Aree comuni e spazi di lavoro flessibili',
-        'Sistema di riscaldamento e raffreddamento a pavimento',
-        'Impianto fotovoltaico da 10 kW'
-      ],
-      sfide: 'La principale sfida di questo progetto è stata quella di creare un ambiente di lavoro innovativo e tecnologicamente avanzato, mantenendo al contempo un elevato livello di comfort e sostenibilità.',
-      soluzioni: 'Abbiamo adottato un approccio integrato, collaborando strettamente con gli esperti di tecnologia e sostenibilità. La struttura è stata progettata per massimizzare l\'esposizione solare e la vista panoramica, con ampie vetrate e un sistema di ombreggiatura automatizzato. I materiali sono stati selezionati per le loro proprietà isolanti e la loro sostenibilità ambientale.'
-    },
-    {
-      id: 4,
-      title: 'Capannone Produttivo Torino',
-      slug: 'capannone-Produttivo-torino',
-      categoria: 'Produttivo',
-      anno: '2020',
-      cliente: 'Industrial Manufacturing srl',
-      location: 'Torino, Italia',
-      image: 'https://images.unsplash.com/photo-1553413077-190dd305871c?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80',
-      galleryImages: [
-        'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80',
-        'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80',
-        'https://images.unsplash.com/photo-1471039497385-b6d6ba609f9c?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80',
-      ],
-      descrizioneBreve: 'Capannone Produttivo con superficie di 10.000 mq.',
-      descrizioneCompleta: 'Il capannone Produttivo per Industrial Manufacturing srl a Torino rappresenta un esempio di come la tecnologia e l\'innovazione possano essere integrate in un ambiente Produttivo. La struttura è stata progettata per massimizzare l\'efficienza e la produttività, con aree di lavoro flessibili e un sistema di gestione della produzione avanzato.',
-      caratteristiche: [
-        'Superficie: 10.000 mq',
-        'Altezza: 10 metri',
-        'Sistema di riscaldamento e raffreddamento a pavimento',
-        'Impianto fotovoltaico da 20 kW',
-        'Sistema di gestione della produzione avanzato',
-        'Aree di lavoro flessibili'
-      ],
-      sfide: 'La principale sfida di questo progetto è stata quella di creare un ambiente Produttivo efficiente e produttivo, mantenendo al contempo un elevato livello di comfort e sostenibilità.',
-      soluzioni: 'Abbiamo adottato un approccio integrato, collaborando strettamente con gli esperti di tecnologia e sostenibilità. La struttura è stata progettata per massimizzare l\'esposizione solare e la vista panoramica, con ampie vetrate e un sistema di ombreggiatura automatizzato. I materiali sono stati selezionati per le loro proprietà isolanti e la loro sostenibilità ambientale.'
-    },
-    {
-      id: 5,
-      title: 'Ristrutturazione Palazzo Storico',
-      slug: 'ristrutturazione-palazzo-storico',
-      categoria: 'ristrutturazione',
-      anno: '2019',
-      cliente: 'Fondazione Cultura Italia',
-      location: 'Firenze, Italia',
-      image: 'https://images.unsplash.com/photo-1574359411659-8be10a358a53?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80',
-      galleryImages: [
-        'https://images.unsplash.com/photo-1542621334-a254cf47733d?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80',
-        'https://images.unsplash.com/photo-1519125323398-675f0ddb6308?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80',
-        'https://images.unsplash.com/photo-1581360645548-6709220633e4?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80',
-      ],
-      descrizioneBreve: 'Ristrutturazione di un palazzo storico del XVIII secolo.',
-      descrizioneCompleta: 'Il progetto di ristrutturazione del palazzo storico per Fondazione Cultura Italia a Firenze rappresenta un esempio di come la conservazione e il restauro possano essere integrati in un progetto di ristrutturazione. La struttura è stata progettata per massimizzare la conservazione degli elementi storici, con un sistema di restauro avanzato e un approccio sostenibile.',
-      caratteristiche: [
-        'Superficie: 5.000 mq',
-        'Altezza: 15 metri',
-        'Sistema di riscaldamento e raffreddamento a pavimento',
-        'Impianto fotovoltaico da 10 kW',
-        'Sistema di gestione della produzione avanzato',
-        'Aree di lavoro flessibili'
-      ],
-      sfide: 'La principale sfida di questo progetto è stata quella di creare un ambiente storico e culturale, mantenendo al contempo un elevato livello di comfort e sostenibilità.',
-      soluzioni: 'Abbiamo adottato un approccio integrato, collaborando strettamente con gli esperti di conservazione e restauro. La struttura è stata progettata per massimizzare la conservazione degli elementi storici, con un sistema di restauro avanzato e un approccio sostenibile.'
-    }
-  ];
+  const [error, setError] = useState(null);
+  const [activeTab, setActiveTab] = useState('descrizione');
 
   useEffect(() => {
-    // Simuliamo il caricamento dei dati da un'API
-    setLoading(true);
-    
-    // Trova il progetto corrispondente allo slug nell'URL
-    const progettoTrovato = progetti.find(p => p.slug === slug);
-    
-    if (progettoTrovato) {
-      setProgetto(progettoTrovato);
-      
-      // Trova progetti correlati (stessa categoria, ma non lo stesso progetto)
-      const correlati = progetti
-        .filter(p => p.categoria === progettoTrovato.categoria && p.id !== progettoTrovato.id)
-        .slice(0, 3); // Prendi solo i primi 3 progetti correlati
-        console.log(correlati, progettoTrovato,'trov')
-      setProgettiCorrelati(correlati);
+    const fetchProject = async () => {
+      setLoading(true);
+      try {
+        const response = await fetch(`${API_URL}/api/projects/public/${id}`);
+        const data = await response.json();
+        
+        if (data.success) {
+          setProject(data.project);
+          console.log('Progetto caricato:', data.project);
+        } else {
+          setError('Progetto non trovato');
+        }
+      } catch (err) {
+        console.error('Errore caricamento progetto:', err);
+        setError('Errore di connessione. Riprova più tardi.');
+      } finally {
+        setLoading(false);
+        // Scorrimento in alto della pagina
+        window.scrollTo(0, 0);
+      }
+    };
+
+    fetchProject();
+  }, [id]);
+
+  // Formatta la data in stile italiano
+  const formatDate = (dateString) => {
+    if (!dateString) return 'Non specificata';
+    const date = new Date(dateString);
+    return new Intl.DateTimeFormat('it-IT', { 
+      day: 'numeric', 
+      month: 'long', 
+      year: 'numeric' 
+    }).format(date);
+  };
+
+  // Status badge color
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'Completato': return 'success';
+      case 'In corso': return 'primary';
+      case 'In pausa': return 'warning';
+      case 'Pianificato': return 'info';
+      default: return 'secondary';
     }
-    
-    setLoading(false);
-  }, [slug]);
+  };
+
+  // Fallback image in case of loading error
+  const handleImageError = (e) => {
+    e.target.onerror = null; 
+    e.target.src = "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgZmlsbD0iI2VlZWVlZSIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LWZhbWlseT0iQXJpYWwsIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMTQiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZpbGw9IiM5OTk5OTkiPkltbWFnaW5lIG5vbiBkaXNwb25pYmlsZTwvdGV4dD48L3N2Zz4=";
+  };
 
   if (loading) {
     return (
-      <Container className="py-5 text-center">
-        <div className="spinner-border text-primary" role="status">
-          <span className="visually-hidden">Caricamento...</span>
-        </div>
-        <p className="mt-3">Caricamento del progetto...</p>
-      </Container>
+      <>
+        <Header />
+        <Container className="py-5 text-center">
+          <Spinner animation="border" role="status" className="my-5">
+            <span className="visually-hidden">Caricamento...</span>
+          </Spinner>
+          <p>Caricamento progetto in corso...</p>
+        </Container>
+        <Footer />
+      </>
     );
   }
 
-  if (!progetto) {
+  if (error || !project) {
     return (
-      <Container className="py-5 text-center">
-        <h2>Progetto non trovato</h2>
-        <p>Il progetto che stai cercando non esiste o è stato rimosso.</p>
-        <Link to="/progetti" className="btn btn-primary mt-3">Torna ai Progetti</Link>
-      </Container>
+      <>
+        <Header />
+        <Container className="py-5">
+          <div className="alert alert-danger">
+            {error || 'Progetto non trovato'}
+          </div>
+          <Link to="/progetti" className="btn btn-primary">Torna ai Progetti</Link>
+        </Container>
+        <Footer />
+      </>
     );
   }
 
   return (
     <>
-      {/* Page Header */}
-      <PageHeader 
-        title={progetto.title} 
-        backgroundImage={progetto.image} 
-      />
-
-      {/* Project Overview */}
-      <section className="project-overview">
+      <Header />
+      <div className="project-detail-hero" 
+           style={{
+             backgroundImage: project.images && project.images.length > 0 
+               ? `linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.7)), url(${API_URL}/uploads/${project.images[0].filename})`
+               : 'linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.7)), url(/images/placeholder.jpg)',
+             backgroundSize: 'cover',
+             backgroundPosition: 'center',
+             padding: '80px 0',
+             color: 'white',
+             marginBottom: '30px',
+             marginTop:120
+           }}>
         <Container>
-          <Row>
-            <Col lg={8}>
-              <div className="project-gallery">
-                <div className="main-image">
-                  <img src={progetto.image} alt={progetto.title} className="img-fluid" />
-                  <div className="project-category">{progetto.categoria}</div>
-                </div>
-                <Row className="gallery-thumbnails mt-4">
-                  {progetto.galleryImages && progetto.galleryImages.map((img, index) => (
-                    <Col md={4} key={index} className="mb-4">
-                      <div className="thumbnail">
-                        <img src={img} alt={`${progetto.title} - Immagine ${index + 1}`} className="img-fluid" />
-                      </div>
-                    </Col>
-                  ))}
-                </Row>
+          <h1>{project.title}</h1>
+          <div className="d-flex flex-wrap align-items-center mt-3">
+            <Badge bg={getStatusColor(project.status)} className="me-2 mb-2">{project.status}</Badge>
+            {project.location && (
+              <div className="me-3 mb-2">
+                <FontAwesomeIcon icon={faMapMarkerAlt} className="me-1" /> {project.location}
               </div>
-            </Col>
-            <Col lg={4}>
-              <div className="project-info">
-                <h2>Informazioni Progetto</h2>
-                <div className="info-item">
-                  <h3>Cliente</h3>
-                  <p>{progetto.cliente}</p>
-                </div>
-                <div className="info-item">
-                  <h3>Località</h3>
-                  <p>{progetto.location}</p>
-                </div>
-                <div className="info-item">
-                  <h3>Anno</h3>
-                  <p>{progetto.anno}</p>
-                </div>
-                <div className="info-item">
-                  <h3>Categoria</h3>
-                  <p>
-                    <Badge bg="primary">{progetto.categoria}</Badge>
-                  </p>
-                </div>
-                <div className="cta-buttons mt-4">
-                  <Link to="/contatti" className="btn btn-primary w-100 mb-3">
-                    Richiedi Informazioni
-                  </Link>
-                  <Button variant="outline-primary" className="w-100">
-                    <FontAwesomeIcon icon={['fas', 'download']} className="me-2" />
-                    Scarica Brochure
-                  </Button>
-                </div>
-              </div>
-            </Col>
-          </Row>
-        </Container>
-      </section>
-
-      {/* Project Description */}
-      <section className="project-description">
-        <Container>
-          <Row>
-            <Col lg={12}>
-              <div className="description-content">
-                <h2>Descrizione del Progetto</h2>
-                <p className="lead">{progetto.descrizioneBreve}</p>
-                <p>{progetto.descrizioneCompleta}</p>
-              </div>
-            </Col>
-          </Row>
-
-          <Row className="mt-5">
-            <Col lg={6}>
-              <div className="project-features">
-                <h3>Caratteristiche</h3>
-                <ul className="features-list">
-                  {progetto.caratteristiche && progetto.caratteristiche.map((feature, index) => (
-                    <li key={index}>
-                      <FontAwesomeIcon icon={['fas', 'check-circle']} className="feature-icon" />
-                      <span>{feature}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </Col>
-            <Col lg={6}>
-              <div className="project-challenges">
-                <h3>Sfide e Soluzioni</h3>
-                <div className="challenge-item">
-                  <h4>Le Sfide</h4>
-                  <p>{progetto.sfide}</p>
-                </div>
-                <div className="challenge-item">
-                  <h4>Le Nostre Soluzioni</h4>
-                  <p>{progetto.soluzioni}</p>
-                </div>
-              </div>
-            </Col>
-          </Row>
-        </Container>
-      </section>
-
-      {/* Related Projects */}
-      {progettiCorrelati.length > 0 && (
-        <section className="related-projects">
-          <Container>
-            <div className="section-header text-center">
-              <h2>Progetti Correlati</h2>
-              <p>Esplora altri progetti simili realizzati da CSV</p>
+            )}
+            <div className="me-3 mb-2">
+              <FontAwesomeIcon icon={faBuilding} className="me-1" /> {project.category}
             </div>
-            <Row>
-              {progettiCorrelati.map((progetto) => (
-                <Col lg={4} md={6} key={progetto.id} className="mb-4">
-                  <Card className="project-card h-100">
-                    <div className="project-image">
-                      <Card.Img variant="top" src={progetto.image} alt={progetto.title} />
-                      <div className="project-overlay">
-                        <Link to={`/progetti/${progetto.slug}`} className="btn btn-light">
-                          Vedi Dettagli
-                        </Link>
-                      </div>
-                      <div className="project-category">{progetto.categoria}</div>
-                    </div>
-                    <Card.Body>
-                      <Card.Title>{progetto.title}</Card.Title>
-                      <Card.Text>{progetto.descrizioneBreve}</Card.Text>
-                    </Card.Body>
-                    <Card.Footer>
-                      <Link to={`/progetti/${progetto.slug}`} className="btn btn-outline-primary btn-block">
-                        Scopri di più
-                      </Link>
-                    </Card.Footer>
-                  </Card>
-                </Col>
-              ))}
-            </Row>
-          </Container>
-        </section>
-      )}
-
-      {/* CTA Section */}
-      <section className="cta-section">
-        <Container>
-          <Row className="justify-content-center">
-            <Col lg={10} className="text-center">
-              <div className="cta-content">
-                <h2>Hai un Progetto in Mente?</h2>
-                <p>Contattaci per una consulenza gratuita e senza impegno. Il nostro team è pronto ad ascoltare le tue esigenze e a trovare la soluzione più adatta.</p>
-                <div className="cta-buttons">
-                  <Link to="/contatti" className="btn btn-primary btn-lg me-3">Richiedi Preventivo</Link>
-                  <Link to="/servizi" className="btn btn-outline-light btn-lg">Esplora i Servizi</Link>
-                </div>
+            {project.projectType && (
+              <div className="me-3 mb-2">
+                <FontAwesomeIcon icon={faTags} className="me-1" /> {project.projectType}
               </div>
-            </Col>
-          </Row>
+            )}
+            {project.budget && (
+              <div className="me-3 mb-2">
+                <FontAwesomeIcon icon={faEuroSign} className="me-1" /> Budget: €{parseInt(project.budget).toLocaleString('it-IT')}
+              </div>
+            )}
+            {project.startDate && (
+              <div className="me-3 mb-2">
+                <FontAwesomeIcon icon={faCalendar} className="me-1" /> {formatDate(project.startDate)}
+                {project.endDate && <> - {formatDate(project.endDate)}</>}
+              </div>
+            )}
+          </div>
         </Container>
-      </section>
+      </div>
+
+      <Container className="pb-5">
+        <Row>
+          <Col lg={8}>
+            <Tabs
+              activeKey={activeTab}
+              onSelect={(k) => setActiveTab(k)}
+              className="mb-4"
+              fill
+            >
+              <Tab eventKey="descrizione" title="Descrizione">
+                <div className="p-4 bg-white rounded shadow-sm">
+                  <div className="mb-4">
+                    {project.description ? (
+                      <p style={{whiteSpace: 'pre-line'}}>{project.description}</p>
+                    ) : (
+                      <p className="text-muted">Nessuna descrizione disponibile</p>
+                    )}
+                  </div>
+                </div>
+              </Tab>
+              
+              <Tab eventKey="immagini" title="Galleria">
+                <div className="p-4 bg-white rounded shadow-sm">
+                  {project.images && project.images.length > 0 ? (
+                    <Row xs={1} md={2} lg={3} className="g-4">
+                      {project.images.map((image, index) => (
+                        <Col key={index}>
+                          <Card className="h-100">
+                            <Card.Img 
+                              variant="top" 
+                              src={`${API_URL}/uploads/${image.filename}`}
+                              onError={handleImageError}
+                              style={{ height: '200px', objectFit: 'cover' }}
+                            />
+                          </Card>
+                        </Col>
+                      ))}
+                    </Row>
+                  ) : (
+                    <p className="text-muted">Nessuna immagine disponibile</p>
+                  )}
+                </div>
+              </Tab>
+              
+              {project.projectType === 'Multiproprietà' && project.apartments && project.apartments.length > 0 && (
+                <Tab eventKey="appartamenti" title={`Appartamenti (${project.apartments.length})`}>
+                  <div className="p-4 bg-white rounded shadow-sm">
+                    <h4 className="mb-4">Unità disponibili</h4>
+                    <Row xs={1} md={2} lg={3} className="g-4">
+                      {project.apartments.map((apartment, index) => (
+                        <Col key={index}>
+                          <Card className="h-100 apartment-card border-0 shadow-sm">
+                            {apartment.images && apartment.images.length > 0 ? (
+                              <div className="position-relative">
+                                <Card.Img 
+                                  variant="top" 
+                                  src={`${API_URL}/uploads/${apartment.images[0].filename}`} 
+                                  onError={handleImageError}
+                                  style={{ height: '220px', objectFit: 'cover' }}
+                                  className="rounded-top"
+                                />
+                                <Badge 
+                                  bg={apartment.status === 'Disponibile' ? 'success' : apartment.status === 'Venduto' ? 'danger' : 'warning'} 
+                                  className="position-absolute top-0 end-0 m-2"
+                                >
+                                  {apartment.status}
+                                </Badge>
+                              </div>
+                            ) : (
+                              <div className="placeholder-image rounded-top" style={{height: '220px', backgroundColor: '#f8f9fa', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#6c757d'}}>
+                                <span>Nessuna immagine</span>
+                              </div>
+                            )}
+                            <Card.Body>
+                              <Card.Title className="fs-5 fw-bold mb-3">{apartment.title}</Card.Title>
+                              
+                              {apartment.description && (
+                                <Card.Text className="text-muted mb-3 small">
+                                  {apartment.description.length > 100 
+                                    ? `${apartment.description.substring(0, 100)}...` 
+                                    : apartment.description}
+                                </Card.Text>
+                              )}
+                              
+                              <div className="apartment-features">
+                                <div className="d-flex flex-wrap gap-3 mb-3">
+                                  {apartment.squareMeters && (
+                                    <div className="feature-item">
+                                      <FontAwesomeIcon icon={faRulerCombined} className="me-1 text-primary" /> 
+                                      <span>{apartment.squareMeters} m²</span>
+                                    </div>
+                                  )}
+                                  {apartment.bedrooms !== undefined && (
+                                    <div className="feature-item">
+                                      <FontAwesomeIcon icon={faBed} className="me-1 text-primary" /> 
+                                      <span>{apartment.bedrooms}</span>
+                                    </div>
+                                  )}
+                                  {apartment.bathrooms !== undefined && (
+                                    <div className="feature-item">
+                                      <FontAwesomeIcon icon={faBath} className="me-1 text-primary" /> 
+                                      <span>{apartment.bathrooms}</span>
+                                    </div>
+                                  )}
+                                  {apartment.floor !== undefined && (
+                                    <div className="feature-item">
+                                      <FontAwesomeIcon icon={faBuilding} className="me-1 text-primary" /> 
+                                      <span>Piano {apartment.floor}</span>
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                              
+                              {apartment.budget > 0 && (
+                                <div className="price-tag mt-3 pt-2 border-top">
+                                  <FontAwesomeIcon icon={faEuroSign} className="me-1" />
+                                  <span className="fw-bold">{apartment.budget.toLocaleString('it-IT')} €</span>
+                                </div>
+                              )}
+                            </Card.Body>
+                          </Card>
+                        </Col>
+                      ))}
+                    </Row>
+                  </div>
+                </Tab>
+              )}
+              
+              <Tab eventKey="dettagli" title="Info">
+                <div className="p-4 bg-white rounded shadow-sm">
+                  <Table striped bordered hover>
+                    <tbody>
+                      <tr>
+                        <td width="30%"><strong>Categoria</strong></td>
+                        <td>{project.category}</td>
+                      </tr>
+                      {project.projectType && (
+                        <tr>
+                          <td><strong>Tipo Progetto</strong></td>
+                          <td>{project.projectType}</td>
+                        </tr>
+                      )}
+                      <tr>
+                        <td><strong>Stato</strong></td>
+                        <td><Badge bg={getStatusColor(project.status)}>{project.status}</Badge></td>
+                      </tr>
+                      <tr>
+                        <td><strong>Location</strong></td>
+                        <td>{project.location || 'Non specificata'}</td>
+                      </tr>
+                      <tr>
+                        <td><strong>Data Inizio</strong></td>
+                        <td>{formatDate(project.startDate)}</td>
+                      </tr>
+                      <tr>
+                        <td><strong>Data Fine</strong></td>
+                        <td>{formatDate(project.endDate)}</td>
+                      </tr>
+                      <tr>
+                        <td><strong>Budget</strong></td>
+                        <td>{project.budget ? `€${parseInt(project.budget).toLocaleString('it-IT')}` : 'Non specificato'}</td>
+                      </tr>
+                      {project.projectType === 'Multiproprietà' && (
+                        <tr>
+                          <td><strong>Unità Abitative</strong></td>
+                          <td>{project.apartments ? project.apartments.length : 0}</td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </Table>
+                </div>
+              </Tab>
+            </Tabs>
+          </Col>
+          
+          <Col style={{zIndex:0}} lg={4}>
+            <div className="sticky-top" style={{top: '100px'}}>
+              {/* Informazioni di contatto */}
+              <Card className="mb-4 shadow-sm">
+                <Card.Header as="h5">Contattaci per questo progetto</Card.Header>
+                <Card.Body>
+                  <Card.Text>
+                    Sei interessato a questo progetto? Contattaci per maggiori informazioni.
+                  </Card.Text>
+                  <Button variant="primary" href="/contatti" className="w-100">Richiedi Informazioni</Button>
+                </Card.Body>
+              </Card>
+              
+              {/* Immagine principale per mobile view */}
+              <div className="d-lg-none mb-4">
+                {project.images && project.images.length > 0 ? (
+                  <Image 
+                    src={`${API_URL}/uploads/${project.images[0].filename}`}
+                    className="img-fluid rounded shadow-sm"
+                    onError={handleImageError}
+                  />
+                ) : (
+                  <div className="placeholder-image rounded shadow-sm" style={{height: '200px', backgroundColor: '#f8f9fa', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
+                    <span className="text-muted">Nessuna immagine disponibile</span>
+                  </div>
+                )}
+              </div>
+              
+              {/* Altri progetti correlati */}
+              <Card className="shadow-sm">
+                <Card.Header as="h5">Progetti Correlati</Card.Header>
+                <Card.Body>
+                  <Card.Text>
+                    Scopri altri progetti nella categoria <strong>{project.category}</strong>.
+                  </Card.Text>
+                  <Button variant="outline-primary" href="/progetti" className="w-100">Vedi Tutti i Progetti</Button>
+                </Card.Body>
+              </Card>
+            </div>
+          </Col>
+        </Row>
+      </Container>
+      
+      <style jsx="true">{`
+        .project-detail-hero {
+          position: relative;
+          text-shadow: 1px 1px 3px rgba(0,0,0,0.8);
+        }
+        
+        .apartment-card {
+          transition: transform 0.2s;
+        }
+        
+        .apartment-card:hover {
+          transform: translateY(-5px);
+          box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+      `}</style>
     </>
   );
 };

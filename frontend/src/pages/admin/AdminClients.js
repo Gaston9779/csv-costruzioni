@@ -15,7 +15,6 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 
 const AdminClients = ({ onStatsUpdate }) => {
-  console.log("AdminClients componente inizializzato");
 
   const [clients, setClients] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -40,7 +39,6 @@ const AdminClients = ({ onStatsUpdate }) => {
 
   // Carica i clienti all'avvio
   useEffect(() => {
-    console.log("AdminClients - useEffect iniziale");
     fetchClients();
   }, []);
 
@@ -57,7 +55,7 @@ const AdminClients = ({ onStatsUpdate }) => {
 
     return () => {
       // Pulizia quando il componente viene smontato
-      console.log("AdminClients smontato, cleanup refresh functions");
+     
       window.AdminClientsRefresh = null;
     };
   }, []);
@@ -84,7 +82,6 @@ const AdminClients = ({ onStatsUpdate }) => {
       });
 
       const data = await response.json();
-      console.log("Risposta fetchClients:", data);
 
       if (data.success) {
         // Combina localClients e externalClients in un unico array
@@ -94,7 +91,7 @@ const AdminClients = ({ onStatsUpdate }) => {
         ];
         
         setClients(allClients);
-        console.log("Clienti caricati:", allClients.length);
+       
         
         if (onStatsUpdate && typeof onStatsUpdate === 'function') {
           onStatsUpdate(); // Aggiorna le statistiche nel componente padre
@@ -265,13 +262,10 @@ const AdminClients = ({ onStatsUpdate }) => {
   };
 
   useEffect(() => {
-    console.log("AdminClients montato, fetchClients parte", clients);
+   
     fetchClients();
   }, []);
 
-  useEffect(() => {
-    console.log("AdminClients montato", currentClient);
-  }, [currentClient]);
 
   return (
     <div className="admin-clients">

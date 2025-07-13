@@ -16,7 +16,6 @@ mongoose.connect(process.env.MONGODB_URI, {
   useUnifiedTopology: true,
 })
 .then(async () => {
-  console.log('Connessione a MongoDB riuscita');
   
   try {
     // Verifica se esiste già un admin

@@ -8,6 +8,7 @@ const Project = require('../models/Project');
 const mongoose = require('mongoose'); // Aggiungere questa riga per utilizzare mongoose.Types.ObjectId
 const Counter = require('../models/Counter');
 const bcrypt = require('bcryptjs'); // Aggiungere questa riga per utilizzare bcrypt
+const fs = require('fs'); // Aggiungere questa riga per utilizzare fs
 
 // Middleware che verifica l'autenticazione e i privilegi di admin per tutte le rotte
 router.use(authenticateToken, isAdmin);
@@ -186,28 +187,68 @@ router.delete('/documents/:id', adminController.deleteDocument);
 
 /**
  * @route   GET /api/admin/projects
- * @desc    Ottiene tutti i progetti
+ * @desc    Ottiene tutti i progetti (con paginazione e filtri)
  * @access  Solo admin
  */
 router.get('/projects', async (req, res) => {
     try {
-      console.log("GET /projects: Richiesta ricevuta");
-      // Recupera tutti i progetti e popola il campo client per mostrare i dati del cliente
-      const projects = await Project.find()
-        .populate('client', 'name email') // Solo nome e email del cliente
-        .sort({ projectId: -1 }); // Ordina per projectId numerico decrescente
+      const { category, status, client, page = 1, limit = 10, sort } = req.query;
       
-      console.log(`GET /projects: Trovati ${projects.length} progetti`);
+      const filter = {};
+      if (category && category !== 'all') {
+        filter.category = category;
+      }
+      if (status && status !== 'all') {
+        filter.status = status;
+      }
+      if (client) {
+        filter.client = client;
+      }
+      
+      const skip = (page - 1) * limit;
+      
+      // Imposta l'ordinamento
+      let sortOption = { createdAt: -1 }; // Default
+      if (sort === 'updatedAt') {
+        sortOption = { updatedAt: -1 };
+      } else if (sort === 'projectId') {
+        sortOption = { projectId: -1 };
+      }
+      
+      // SOLUZIONE DEFINITIVA: query con selezione esplicita di TUTTI i campi
+      const rawProjects = await Project.find(filter)
+        .populate('client', 'name email')
+        .populate('createdBy', 'name email')
+        .sort(sortOption)
+        .limit(parseInt(limit))
+        .skip(skip);
+      
+      // Converti ogni progetto in JSON con esplicita preservazione di projectType e apartments
+      const projects = rawProjects.map(project => {
+        const plainObj = project.toObject();
+        console.log(`ADMIN GET /projects: Progetto ${plainObj._id} - projectType=${plainObj.projectType || 'MANCANTE'}, apartments=${plainObj.apartments ? plainObj.apartments.length : 'MANCANTE'}`);
+        
+        return {
+          ...plainObj,
+          projectType: plainObj.projectType || 'Singola', // Preserva il valore originale o usa il default
+          apartments: plainObj.apartments || [] // Preserva gli apartments o usa array vuoto
+        };
+      });
+      
+      const total = await Project.countDocuments(filter);
       
       res.json({
         success: true,
-        projects: projects
+        projects,
+        totalPages: Math.ceil(total / limit),
+        currentPage: parseInt(page)
       });
     } catch (error) {
       console.error('Errore nel recupero progetti:', error);
       res.status(500).json({
         success: false,
-        message: 'Errore nel recupero dei progetti'
+        message: 'Errore nel recupero dei progetti',
+        error: error.message
       });
     }
   });
@@ -233,8 +274,13 @@ router.get('/projects', async (req, res) => {
         location,
         budget,
         featured,
-        visible
+        visible,
+        projectType, 
+        apartments   
       } = req.body;
+
+      console.log("POST /projects: projectType ricevuto:", projectType);
+      console.log("POST /projects: apartments ricevuto:", apartments);
       
       // Gestione dei file caricati (immagini)
       let images = [];
@@ -251,7 +297,7 @@ router.get('/projects', async (req, res) => {
         console.log(`POST /projects: ${images.length} immagini caricate`);
         
         // Verifica che esista un client valido per creare i documenti
-        if (client) {
+        if (client && client !== "") {
           // Crea anche i documenti per il cliente
           const Document = require('../models/Document');
           
@@ -274,6 +320,26 @@ router.get('/projects', async (req, res) => {
           console.log('POST /projects: Cliente non specificato, documenti non creati');
         }
       }
+
+      // Gestione degli appartamenti
+      let parsedApartments = [];
+      if (apartments) {
+        try {
+          if (typeof apartments === 'string') {
+            parsedApartments = JSON.parse(apartments);
+          } else {
+            parsedApartments = apartments;
+          }
+          
+          if (!Array.isArray(parsedApartments)) {
+            parsedApartments = [];
+          }
+          
+          console.log(`POST /projects: ${parsedApartments.length} appartamenti da aggiungere`);
+        } catch (e) {
+          console.error('Errore nel parsing degli appartamenti:', e);
+        }
+      }
       
       // Crea un nuovo progetto - non serve più impostare manualmente l'ID
       // perché il middleware pre-save lo farà automaticamente
@@ -282,7 +348,7 @@ router.get('/projects', async (req, res) => {
         description,
         category,
         status,
-        client, // ID del cliente
+        client: client && client !== "" ? client : null,
         startDate: startDate ? new Date(startDate) : undefined,
         endDate: endDate ? new Date(endDate) : undefined,
         location,
@@ -290,7 +356,9 @@ router.get('/projects', async (req, res) => {
         featured: featured || false,
         visible: visible !== undefined ? visible : true,
         createdBy: req.user.id, // L'ID dell'utente admin che sta creando il progetto
-        images: images // Aggiunge le immagini al progetto
+        images,
+        projectType: projectType || 'Singola', 
+        apartments: parsedApartments 
       });
       
       await newProject.save();
@@ -317,40 +385,81 @@ router.get('/projects', async (req, res) => {
    * @desc    Aggiorna un progetto esistente
    * @access  Solo admin
    */
-  router.put('/projects/:id',upload.array('images'), async (req, res) => {
+  router.put('/projects/:id', upload.array('images'), async (req, res) => {
     try {
-      const projectId = parseInt(req.params.id);
+      const projectId = req.params.id;
+      console.log(`PUT /projects/${projectId}: Aggiornamento progetto`);
       
-      // Verifica che l'ID sia un numero valido
-      if (isNaN(projectId)) {
-        console.error(`ID progetto non valido: ${req.params.id}`);
-        return res.status(400).json({
-          success: false,
-          message: `ID progetto non valido: ${req.params.id} - deve essere un numero`
-        });
+      // Estrai i dati dal body
+      const { 
+        title, 
+        description, 
+        category, 
+        status, 
+        client, 
+        startDate, 
+        endDate, 
+        location,
+        budget,
+        featured,
+        visible,
+        projectType, 
+        apartments   
+      } = req.body;
+      
+      console.log(`PUT /projects/${projectId}: projectType ricevuto:`, projectType);
+      console.log(`PUT /projects/${projectId}: apartments ricevuto:`, apartments);
+
+      // Gestisci il parsing degli appartamenti
+      let parsedApartments = [];
+      if (apartments) {
+        try {
+          if (typeof apartments === 'string') {
+            parsedApartments = JSON.parse(apartments);
+            console.log(`PUT /projects/${projectId}: Apartments JSON parsed:`, parsedApartments);
+          } else {
+            parsedApartments = apartments;
+            console.log(`PUT /projects/${projectId}: Apartments già come object:`, parsedApartments);
+          }
+          
+          if (!Array.isArray(parsedApartments)) {
+            console.error('Apartments non è un array', parsedApartments);
+            parsedApartments = [];
+          }
+          
+          console.log(`PUT /projects/${projectId}: ${parsedApartments.length} appartamenti trovati`);
+        } catch (e) {
+          console.error(`PUT /projects/${projectId}: Errore nel parsing degli appartamenti:`, e);
+        }
       }
       
-      console.log(`PUT /projects/${projectId}: Richiesta ricevuta`, req.body);
-      
-      // Estrai i campi dal body
-      const updateData = { ...req.body };
-      
-      // Converte le date se presenti
-      if (updateData.startDate) updateData.startDate = new Date(updateData.startDate);
-      if (updateData.endDate) updateData.endDate = new Date(updateData.endDate);
-      
-      // Recupera il progetto esistente per gestire le immagini
-      const existingProject = await Project.findOne({ projectId: projectId });
-      if (!existingProject) {
+      // Verifica che il progetto esista
+      const project = await Project.findById(projectId);
+      if (!project) {
         return res.status(404).json({
           success: false,
-          message: `Progetto con ID ${projectId} non trovato`
+          message: 'Progetto non trovato'
         });
       }
       
-      // Gestione delle immagini caricate
+      // Aggiorna i campi del progetto
+      if (title) project.title = title;
+      if (description !== undefined) project.description = description;
+      if (category) project.category = category;
+      if (status) project.status = status;
+      if (client) project.client = client && client !== "" ? client : null;
+      if (startDate) project.startDate = new Date(startDate);
+      if (endDate) project.endDate = new Date(endDate);
+      if (location !== undefined) project.location = location;
+      if (budget) project.budget = parseFloat(budget);
+      if (featured !== undefined) project.featured = featured === 'true' || featured === true;
+      if (visible !== undefined) project.visible = visible === 'true' || visible === true;
+      if (projectType) project.projectType = projectType; 
+      if (parsedApartments && parsedApartments.length > 0) project.apartments = parsedApartments; 
+      
+      // Gestisci le nuove immagini se presenti
       if (req.files && req.files.length > 0) {
-        // Crea array di nuove immagini
+        // Aggiungi le nuove immagini all'array esistente
         const newImages = req.files.map(file => ({
           path: file.path.replace(/\\/g, '/'),
           filename: file.filename,
@@ -359,68 +468,60 @@ router.get('/projects', async (req, res) => {
           size: file.size
         }));
         
-        console.log(`PUT /projects/${projectId}: ${newImages.length} nuove immagini caricate`);
+        if (!project.images) project.images = [];
+        project.images = [...project.images, ...newImages];
         
-        // Se il progetto già ha immagini, aggiungile all'array esistente
-        if (existingProject.images && Array.isArray(existingProject.images)) {
-          updateData.images = [...existingProject.images, ...newImages];
-        } else {
-          // Altrimenti inizializza l'array con le nuove immagini
-          updateData.images = newImages;
-        }
+        console.log(`PUT /projects/${projectId}: Aggiunte ${newImages.length} nuove immagini`);
         
-        // Crea anche i documenti per il cliente se è specificato
-        if (existingProject.client) {
+        // Crea anche i documenti per il cliente
+        if (project.client) {
           const Document = require('../models/Document');
           
-          // Per ogni nuovo file crea un documento associato al cliente
           for (const file of req.files) {
             const document = new Document({
-              title: `${existingProject.title} - ${file.originalname}`,
+              title: `${project.title} - ${file.originalname}`,
               file_path: file.path.replace(/\\/g, '/'),
               file_name: file.filename,
               file_type: file.mimetype,
               file_size: file.size,
-              client: existingProject.client,
+              client: project.client,
               uploaded_by: req.user.id
             });
             
             await document.save();
-            console.log(`PUT /projects/${projectId}: Documento creato per il cliente ${existingProject.client}: ${document._id}`);
+            console.log(`PUT /projects/${projectId}: Documento creato: ${document._id}`);
           }
-        } else {
-          console.log(`PUT /projects/${projectId}: Cliente non specificato, documenti non creati`);
         }
       }
       
-      // Aggiorna il progetto usando projectId
-      const project = await Project.findOneAndUpdate(
-        { projectId: projectId }, // Cerca per projectId
-        updateData,
-        { new: true, runValidators: true }
-      ).populate('client', 'name email');
+      // Salva le modifiche
+      await project.save();
       
-      if (!project) {
-        console.error(`PUT /projects/${projectId}: Progetto non trovato`);
-        return res.status(404).json({
-          success: false,
-          message: `Progetto con ID ${projectId} non trovato`
-        });
-      }
+      // Recupera il progetto aggiornato con tutti i campi
+      const updatedProject = await Project.findById(projectId)
+        .populate('client', 'name email')
+        .populate('createdBy', 'name email')
+        .lean(); // Usa lean() per ottenere un oggetto JavaScript puro
       
-      console.log(`PUT /projects/${projectId}: Progetto aggiornato con successo`);
-      
+      // Log di controllo per i campi critici
+      console.log(`PUT /projects/${projectId}: Progetto aggiornato:`, {
+        id: updatedProject._id,
+        title: updatedProject.title,
+        projectType: updatedProject.projectType,
+        apartments: updatedProject.apartments ? updatedProject.apartments.length : 0
+      });
+
       res.json({
         success: true,
         message: 'Progetto aggiornato con successo',
-        project
+        project: updatedProject
       });
     } catch (error) {
       console.error('Errore nell\'aggiornamento del progetto:', error);
       res.status(500).json({
         success: false,
         message: 'Errore nell\'aggiornamento del progetto',
-        error: process.env.NODE_ENV === 'development' ? error.message : undefined
+        error: error.message
       });
     }
   });
@@ -430,45 +531,17 @@ router.get('/projects', async (req, res) => {
    * @desc    Elimina un progetto
    * @access  Solo admin
    */
-  router.delete('/projects/:id', async (req, res) => {
-    try {
-      const projectId = parseInt(req.params.id);
-      
-      // Verifica che l'ID sia un numero valido
-      if (isNaN(projectId)) {
-        console.error(`ID progetto non valido: ${req.params.id}`);
-        return res.status(400).json({
-          success: false,
-          message: `ID progetto non valido: ${req.params.id} - deve essere un numero`
-        });
-      }
-      
-      console.log(`DELETE /projects/${projectId}: Richiesta ricevuta`);
-      
-      // Elimina il progetto usando projectId
-      const project = await Project.findOneAndDelete({ projectId: projectId });
-      
-      if (!project) {
-        console.error(`DELETE /projects/${projectId}: Progetto non trovato`);
-        return res.status(404).json({
-          success: false,
-          message: `Progetto con ID ${projectId} non trovato`
-        });
-      }
-      
-      console.log(`DELETE /projects/${projectId}: Progetto eliminato con successo`);
-      
-      res.json({
-        success: true,
-        message: 'Progetto eliminato con successo'
-      });
-    } catch (error) {
-      console.error('Errore nell\'eliminazione del progetto:', error);
-      res.status(500).json({
-        success: false,
-        message: 'Errore nell\'eliminazione del progetto'
-      });
-    }
+  // DISABILITIAMO questa route che causa problemi con ID MongoDB
+  // router.delete('/projects/:id', async (req, res) => { ... });
+  
+  // Reindirizza alla route corretta in project.js
+  router.delete('/projects/:id', (req, res, next) => {
+    console.log('Redirect route: /api/admin/projects/' + req.params.id + ' --> /api/projects/admin/projects/' + req.params.id);
+    // Questa route è stata spostata in project.js
+    const url = `/api/projects/admin/projects/${req.params.id}`;
+    
+    // Invia una risposta che spiega dove è stata spostata la route
+    res.redirect(307, url);
   });
   
   /**

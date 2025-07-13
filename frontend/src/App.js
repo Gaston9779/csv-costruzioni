@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { Routes, Route } from 'react-router-dom';
 import { library } from '@fortawesome/fontawesome-svg-core';
 import { fab } from '@fortawesome/free-brands-svg-icons';
@@ -17,6 +17,7 @@ import TecnologiaQualita from './pages/TecnologiaQualita';
 import Contatti from './pages/Contatti';
 import AreaClienti from './pages/AreaClienti';
 import NotFound from './pages/NotFound';
+import ScrollToTop from './components/common/ScrollToTop';
 
 // Importazione degli stili
 import './App.css';
@@ -27,29 +28,9 @@ import './styles/Buttons.css';
 library.add(fab, fas);
 
 function App() {
-  useEffect(() => {
-    // Gestione dello scroll per la navbar
-    const handleScroll = () => {
-      const navbar = document.querySelector('.navbar');
-      if (navbar) {
-        if (window.scrollY > 50) {
-          navbar.classList.add('scrolled');
-        } else {
-          navbar.classList.remove('scrolled');
-        }
-      }
-    };
-
-    window.addEventListener('scroll', handleScroll);
-    
-    // Pulizia dell'event listener quando il componente viene smontato
-    return () => {
-      window.removeEventListener('scroll', handleScroll);
-    };
-  }, []);
-
   return (
     <div className="App">
+      <ScrollToTop />
       <Header />
       <main>
         <Routes>

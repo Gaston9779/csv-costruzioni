@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Container, Row, Col, Button, Card } from 'react-bootstrap';
+import { Container, Row, Col, Button, Card, Spinner } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCheckCircle, faPlus, faCalendarAlt, faMapMarkerAlt } from '@fortawesome/free-solid-svg-icons';
@@ -15,7 +15,7 @@ const testimonial2Url = "https://images.unsplash.com/photo-1494790108377-be9c29b
 const testimonial3Url = "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-1.2.1&auto=format&fit=crop&w=634&q=80";
 
 // API base URL
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+const API_URL = 'https://csv-backend-yg2x.onrender.com';
 
 const Home = () => {
   const [featuredProjects, setFeaturedProjects] = useState([]);
@@ -46,16 +46,27 @@ const Home = () => {
     };
   }, []);
 
+  // Scroll to top quando la pagina viene caricata
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
   // Fetch dei progetti più recenti
   useEffect(() => {
     const fetchProjects = async () => {
       try {
         setLoading(true);
-        const response = await fetch(`${API_URL}/api/projects/public?limit=3`);
+        // Recupera tutti i progetti pubblici
+        const response = await fetch(`${API_URL}/api/projects/public`);
         const data = await response.json();
         
         if (data.success) {
-          setFeaturedProjects(data.projects);
+          // Ordina i progetti per data di creazione (dal più recente)
+          const sortedProjects = data.projects.sort((a, b) => 
+            new Date(b.createdAt) - new Date(a.createdAt)
+          );
+          // Prendi i primi 3
+          setFeaturedProjects(sortedProjects.slice(0, 3));
         } else {
           setError('Errore nel caricamento dei progetti');
         }
@@ -228,9 +239,9 @@ const Home = () => {
           <Row>
             {loading ? (
               <Col xs={12} className="text-center py-5">
-                <div className="spinner-border text-primary" role="status">
+                <Spinner animation="border" variant="primary" role="status">
                   <span className="visually-hidden">Caricamento...</span>
-                </div>
+                </Spinner>
                 <p className="mt-3">Caricamento progetti...</p>
               </Col>
             ) : error ? (
@@ -253,11 +264,15 @@ const Home = () => {
                           variant="top" 
                           src={`${API_URL}/uploads/${project.images[0].filename}`} 
                           alt={project.title} 
+                          onError={(e) => {
+                            e.target.onerror = null; 
+                            e.target.src = "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgZmlsbD0iI2VlZWVlZSIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LWZhbWlseT0iQXJpYWwsIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMTQiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZpbGw9IiM5OTk5OTkiPkltbWFnaW5lIG5vbiBkaXNwb25pYmlsZTwvdGV4dD48L3N2Zz4=";
+                          }}
                         />
                       ) : (
                         <Card.Img 
                           variant="top" 
-                          src="https://via.placeholder.com/300x200?text=Immagine+non+disponibile" 
+                          src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgZmlsbD0iI2VlZWVlZSIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LWZhbWlseT0iQXJpYWwsIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMTQiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZpbGw9IiM5OTk5OTkiPkltbWFnaW5lIG5vbiBkaXNwb25pYmlsZTwvdGV4dD48L3N2Zz4=" 
                           alt={project.title} 
                         />
                       )}

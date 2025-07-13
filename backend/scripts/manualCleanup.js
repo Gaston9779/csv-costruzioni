@@ -68,14 +68,13 @@ async function manualCleanup() {
       console.log(`- ${doc._id} (${doc.title})`);
     });
 
-    console.log('\nPulizia manuale completata con successo!');
+
 
   } catch (error) {
     console.error('Errore durante la pulizia manuale:', error);
   } finally {
     // Chiudi la connessione al database
     await mongoose.connection.close();
-    console.log('Connessione al database chiusa');
   }
 }
 
