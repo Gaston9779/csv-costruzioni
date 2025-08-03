@@ -1,14 +1,24 @@
-const Project = require('../models/Project');
-const Client = require('../models/Client');
+const express = require('express');
+const mongoose = require('mongoose');
 const multer = require('multer');
+const busboy = require('busboy');
 const path = require('path');
 const fs = require('fs');
-const mongoose = require('mongoose'); // Aggiunto require mongoose
+const Project = require('../models/Project');
+const Client = require('../models/Client');
 
-// Configurazione multer per upload immagini progetti
+// Configurazione multer per upload immagini progetti e appartamenti
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    const uploadPath = path.join(__dirname, '../uploads/projects');
+    // Scegli la cartella di destinazione in base al tipo di file
+    let uploadPath;
+    if (file.fieldname === 'apartmentImages') {
+      uploadPath = path.join(__dirname, '../uploads/apartments');
+    } else {
+      // Default per immagini progetti e altri tipi
+      uploadPath = path.join(__dirname, '../uploads/projects');
+    }
+    
     if (!fs.existsSync(uploadPath)) {
       fs.mkdirSync(uploadPath, { recursive: true });
     }
@@ -16,7 +26,13 @@ const storage = multer.diskStorage({
   },
   filename: function (req, file, cb) {
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, 'project-' + uniqueSuffix + path.extname(file.originalname));
+    const extension = path.extname(file.originalname);
+    
+    if (file.fieldname === 'apartmentImages') {
+      cb(null, 'apartment-' + uniqueSuffix + extension);
+    } else {
+      cb(null, 'project-' + uniqueSuffix + extension);
+    }
   }
 });
 
@@ -38,24 +54,313 @@ const upload = multer({
   }
 });
 
-// Middleware per upload multiplo
-module.exports.uploadProjectImages = multer({
-  storage: storage,
-  limits: {
-    fileSize: 10 * 1024 * 1024 // 10MB
-  },
-  fileFilter: (req, file, cb) => {
-    const allowedTypes = /jpeg|jpg|png|gif|webp/;
-    const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
-    const mimetype = allowedTypes.test(file.mimetype);
+// MIDDLEWARE MULTER UPLOADPROJECTIMAGES RIMOSSO - ora tutto gestito manualmente con busboy
+// Non più necessario perché tutte le route usano parsing manuale
 
-    if (mimetype && extname) {
-      return cb(null, true);
-    } else {
-      cb(new Error('Solo immagini sono permesse (jpeg, jpg, png, gif, webp)'));
-    }
+// Gestione multipart manuale per evitare errori multer
+const handleMultipartProjectCreation = async (req, res) => {
+  try {
+    const bb = busboy({ headers: req.headers });
+    const fields = {};
+    const files = [];
+    
+    bb.on('field', (fieldname, val) => {
+      fields[fieldname] = val;
+    });
+    
+    bb.on('file', (fieldname, file, info) => {
+      const { filename, encoding, mimeType } = info;
+      const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+      const extension = path.extname(filename);
+      
+      let uploadDir, newFilename;
+      if (fieldname === 'apartmentImages') {
+        uploadDir = path.join(__dirname, '../uploads/apartments');
+        newFilename = 'apartment-' + uniqueSuffix + extension;
+      } else {
+        uploadDir = path.join(__dirname, '../uploads/projects');
+        newFilename = 'project-' + uniqueSuffix + extension;
+      }
+      
+      if (!fs.existsSync(uploadDir)) {
+        fs.mkdirSync(uploadDir, { recursive: true });
+      }
+      
+      const filePath = path.join(uploadDir, newFilename);
+      const writeStream = fs.createWriteStream(filePath);
+      
+      file.pipe(writeStream);
+      
+      files.push({
+        fieldname,
+        originalname: filename,
+        filename: newFilename,
+        path: filePath,
+        mimetype: mimeType,
+        size: 0 // Sarà aggiornato quando il file è completamente scritto
+      });
+    });
+    
+    bb.on('finish', async () => {
+      // Simula req.body e req.files per compatibilità
+      req.body = fields;
+      req.files = files;
+      
+      // Chiama la logica originale di createProject
+      return createProjectLogic(req, res);
+    });
+    
+    req.pipe(bb);
+  } catch (error) {
+    console.error('Errore nel parsing multipart:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Errore nel parsing della richiesta',
+      error: error.message
+    });
   }
-}).any();
+};
+
+// Gestione multipart manuale per aggiornamento progetto
+const handleMultipartProjectUpdate = async (req, res) => {
+  try {
+    const bb = busboy({ headers: req.headers });
+    const fields = {};
+    const files = [];
+    
+    bb.on('field', (fieldname, val) => {
+      fields[fieldname] = val;
+    });
+    
+    bb.on('file', (fieldname, file, info) => {
+      const { filename, encoding, mimeType } = info;
+      const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+      const extension = path.extname(filename);
+      
+      let uploadDir, newFilename;
+      if (fieldname === 'apartmentImages') {
+        uploadDir = path.join(__dirname, '../uploads/apartments');
+        newFilename = 'apartment-' + uniqueSuffix + extension;
+      } else {
+        uploadDir = path.join(__dirname, '../uploads/projects');
+        newFilename = 'project-' + uniqueSuffix + extension;
+      }
+      
+      if (!fs.existsSync(uploadDir)) {
+        fs.mkdirSync(uploadDir, { recursive: true });
+      }
+      
+      const filePath = path.join(uploadDir, newFilename);
+      const writeStream = fs.createWriteStream(filePath);
+      
+      file.pipe(writeStream);
+      
+      files.push({
+        fieldname,
+        originalname: filename,
+        filename: newFilename,
+        path: filePath,
+        mimetype: mimeType,
+        size: 0
+      });
+    });
+    
+    bb.on('finish', async () => {
+      // Simula req.body e req.files per compatibilità
+      req.body = fields;
+      req.files = files;
+      
+      // Chiama la logica originale di updateProject
+      return updateProjectLogic(req, res);
+    });
+    
+    req.pipe(bb);
+  } catch (error) {
+    console.error('Errore nel parsing multipart per update:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Errore nel parsing della richiesta di aggiornamento',
+      error: error.message
+    });
+  }
+};
+
+// Logica principale di creazione progetto (estratta per riutilizzo)
+const createProjectLogic = async (req, res) => {
+  try {
+    console.log('Inizio createProjectLogic');
+    console.log('Files ricevuti:', req.files ? req.files.length : 'nessun file');
+    console.log('Body:', Object.keys(req.body));
+    
+    const { 
+      title, 
+      description, 
+      client, 
+      category,
+      projectType,
+      status, 
+      startDate, 
+      endDate, 
+      budget, 
+      visible, 
+      featured,
+      apartments
+    } = req.body;
+
+    console.log('VALORI ESTRATTI:');
+    console.log('- projectType:', projectType);
+    console.log('- apartments:', apartments);
+    console.log('- client:', client, typeof client);
+
+    // Validazioni base
+    if (!title) {
+      return res.status(400).json({
+        success: false,
+        message: 'Il titolo è obbligatorio'
+      });
+    }
+
+    // Gestione immagini del progetto principale
+    const images = [];
+    if (req.files && req.files.length > 0) {
+      const projectImages = req.files.filter(file => file.fieldname === 'images');
+      
+      projectImages.forEach(file => {
+        images.push({
+          filename: file.filename,
+          path: file.path,
+          size: file.size,
+          mimetype: file.mimetype,
+          url: `/uploads/projects/${file.filename}`,
+          description: ''
+        });
+      });
+    }
+
+    // Crea il progetto base
+    const projectData = {
+      title,
+      description,
+      client: client && client !== "" ? client : null,
+      category,
+      projectType: projectType || 'Singola',
+      status,
+      startDate,
+      endDate,
+      budget: parseFloat(budget) || 0,
+      visible: visible === 'true',
+      featured: featured === 'true',
+      images,
+      createdBy: req.user.id
+    };
+
+    // Gestione degli appartamenti per progetti multiproprietà
+    const apartmentData = req.body.apartmentData;
+    const finalApartments = apartments || apartmentData;
+    
+    if (finalApartments) {
+      try {
+        let parsedApartments;
+        
+        if (typeof finalApartments === 'string') {
+          parsedApartments = JSON.parse(finalApartments);
+        } else {
+          parsedApartments = finalApartments;
+        }
+        
+        if (!Array.isArray(parsedApartments)) {
+          parsedApartments = [];
+        }
+        
+        projectData.apartments = [];
+        
+        // Gestione immagini degli appartamenti
+        const apartmentImages = req.files ? req.files.filter(file => file.fieldname === 'apartmentImages') : [];
+        
+        // Mappa per metadati
+        const metadataMap = {};
+        for (let i = 0; i < apartmentImages.length; i++) {
+          const metadataKey = `apartmentImageMetadata_${i}`;
+          if (req.body[metadataKey]) {
+            try {
+              metadataMap[i] = JSON.parse(req.body[metadataKey]);
+            } catch (e) {
+              console.error(`Errore parsing metadati immagine ${i}:`, e);
+            }
+          }
+        }
+        
+        // Processa appartamenti
+        for (let i = 0; i < parsedApartments.length; i++) {
+          const apt = parsedApartments[i];
+          
+          const apartment = {
+            title: apt.title || `Appartamento ${i+1}`,
+            description: apt.description || '',
+            squareMeters: apt.squareMeters || 0,
+            floor: apt.floor || 0,
+            bedrooms: apt.bedrooms || 0,
+            bathrooms: apt.bathrooms || 0,
+            budget: apt.budget || 0,
+            status: apt.status || 'In corso',
+            images: []
+          };
+          
+          // Aggiungi immagini associate a questo appartamento
+          apartmentImages.forEach((file, fileIndex) => {
+            const metadata = metadataMap[fileIndex];
+            if (metadata && metadata.apartmentIndex === i) {
+              apartment.images.push({
+                _id: new mongoose.Types.ObjectId(),
+                filename: file.filename,
+                path: file.path,
+                originalName: file.originalname,
+                mimetype: file.mimetype,
+                size: file.size,
+                url: `/uploads/apartments/${file.filename}`,
+                description: metadata.description || ''
+              });
+            }
+          });
+          
+          projectData.apartments.push(apartment);
+        }
+        
+        projectData.totalUnits = projectData.apartments.length;
+      } catch (error) {
+        console.error('Errore nel processing degli appartamenti:', error);
+      }
+    }
+
+    console.log('Creazione progetto con dati:', {
+      ...projectData,
+      images: projectData.images?.length || 0,
+      apartments: projectData.apartments?.length || 0
+    });
+
+    const project = new Project(projectData);
+    await project.save();
+
+    const populatedProject = await Project.findById(project._id)
+      .populate('client', 'name email')
+      .populate('createdBy', 'name email');
+
+    const standardizedProject = standardizeProjectResponse(populatedProject.toObject());
+
+    res.status(201).json({
+      success: true,
+      message: 'Progetto creato con successo',
+      project: standardizedProject
+    });
+  } catch (error) {
+    console.error('Errore nella creazione del progetto:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Errore interno del server',
+      error: error.message
+    });
+  }
+};
 
 // Ottieni tutti i progetti (Direzionale - per il frontend)
 module.exports.getPublicProjects = async (req, res) => {
@@ -72,11 +377,19 @@ module.exports.getPublicProjects = async (req, res) => {
 
     const skip = (page - 1) * limit;
     
-    const projects = await Project.find(filter)
+    const rawProjects = await Project.find(filter)
       .populate('client', 'name')
       .sort({ featured: -1, createdAt: -1 })
       .limit(parseInt(limit))
       .skip(skip);
+      
+    // Converti e standardizza i progetti
+    const projects = rawProjects.map(doc => {
+      const plainProject = JSON.parse(JSON.stringify(doc));
+      return standardizeProjectResponse(plainProject);
+    });
+    
+    console.log(`API getPublicProjects: ${projects.length} progetti normalizzati con URL immagini completi`);
 
     const total = await Project.countDocuments(filter);
 
@@ -102,15 +415,31 @@ module.exports.getPublicProjects = async (req, res) => {
 // Ottieni singolo progetto (Direzionale)
 module.exports.getPublicProject = async (req, res) => {
   try {
-    const project = await Project.findOne({ 
+    const rawProject = await Project.findOne({ 
       _id: req.params.id, 
       visible: true 
     }).populate('client', 'name');
 
-    if (!project) {
+    if (!rawProject) {
       return res.status(404).json({
         success: false,
         message: 'Progetto non trovato'
+      });
+    }
+    
+    // Converti in oggetto JavaScript e normalizza con standardizeProjectResponse
+    const plainProject = JSON.parse(JSON.stringify(rawProject));
+    const project = standardizeProjectResponse(plainProject);
+    
+    // Log di debug
+    console.log(`API getPublicProject: Progetto ${project._id} (${project.title}) normalizzato`);
+    if (project.apartments && project.apartments.length > 0) {
+      console.log(`Il progetto ha ${project.apartments.length} appartamenti`);
+      project.apartments.forEach((apt, i) => {
+        if (apt.images && apt.images.length > 0) {
+          console.log(`Appartamento ${i} ha ${apt.images.length} immagini con URLs:`, 
+            apt.images.map(img => img.url || 'MANCA URL!'));
+        }
       });
     }
 
@@ -153,7 +482,7 @@ module.exports.getAllProjects = async (req, res) => {
       sortOption = { projectId: -1 };
     }
     
-    // SOLUZIONE DEFINITIVA: Esegui la query NON usando .lean() o .select()
+    // Esegui la query NON usando .lean() o .select()
     const rawProjects = await Project.find(filter)
       .populate('client', 'name email')
       .populate('createdBy', 'name email')
@@ -161,21 +490,31 @@ module.exports.getAllProjects = async (req, res) => {
       .limit(parseInt(limit))
       .skip(skip);
       
-    // Converti manualmente in oggetti JS con spread operator per preservare TUTTI i campi
+    // Converti i progetti e applica standardizeProjectResponse per assicurare URL corretti
     const projects = rawProjects.map(doc => {
       // Converti in oggetto JavaScript semplice
       const plainProject = JSON.parse(JSON.stringify(doc));
       
-      // Mantieni il projectType originale o usa default solo se manca
-      return {
-        ...plainProject,
-        projectType: plainProject.projectType || 'Singola', 
-        apartments: plainProject.apartments || []
-      };
+      // Applica standardizeProjectResponse per garantire che tutte le immagini degli appartamenti
+      // abbiano URL completi e non solo ID
+      return standardizeProjectResponse(plainProject);
     });
     
     console.log(`RISPOSTA FINALE: ${projects.length} progetti recuperati`);
-    projects.forEach(p => console.log(`ID: ${p._id}, Titolo: ${p.title}, ProjectType: ${p.projectType}, Apartments: ${p.apartments ? p.apartments.length : 0}`));
+    projects.forEach(p => {
+      console.log(`ID: ${p._id}, Titolo: ${p.title}, ProjectType: ${p.projectType}, Apartments: ${p.apartments ? p.apartments.length : 0}`);
+      
+      // Debug per verificare che gli URL delle immagini siano corretti
+      if (p.apartments && p.apartments.length > 0) {
+        p.apartments.forEach((apt, i) => {
+          if (apt.images && apt.images.length > 0) {
+            console.log(`Appartamento ${i} immagini:`, apt.images.map(img => 
+              img.url ? `URL OK: ${img.url}` : `NO URL: solo ID ${img._id}`
+            ));
+          }
+        });
+      }
+    });
     
     const total = await Project.countDocuments(filter);
     
@@ -198,9 +537,83 @@ module.exports.getAllProjects = async (req, res) => {
   }
 };
 
-// Crea nuovo progetto (solo admin)
-module.exports.createProject = async (req, res) => {
+// Ottieni il dettaglio di un progetto singolo
+module.exports.getProject = async (req, res) => {
   try {
+    const { id } = req.params;
+    
+    // Recupera il progetto con tutte le sue relazioni
+    const project = await Project.findById(id)
+      .populate('client', 'name email')
+      .populate('createdBy', 'name email');
+      
+    if (!project) {
+      return res.status(404).json({
+        success: false,
+        message: 'Progetto non trovato'
+      });
+    }
+    
+    // Converti in oggetto JavaScript e normalizza
+    const projectObj = JSON.parse(JSON.stringify(project));
+    
+    // Applica standardizeProjectResponse per garantire che tutte le immagini abbiano URL completi
+    const standardizedProject = standardizeProjectResponse(projectObj);
+    
+    // Log di debug
+    console.log(`API getProject: Progetto ${standardizedProject._id} (${standardizedProject.title}) normalizzato.`);
+    if (standardizedProject.apartments && standardizedProject.apartments.length > 0) {
+      standardizedProject.apartments.forEach((apt, i) => {
+        if (apt.images && apt.images.length > 0) {
+          console.log(`Appartamento ${i} ha ${apt.images.length} immagini con URLs:`, 
+            apt.images.map(img => img.url || 'MANCA URL!'));
+        }
+      });
+    }
+    
+    res.json({
+      success: true,
+      project: standardizedProject
+    });
+  } catch (error) {
+    console.error('Errore nel recupero del progetto:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Errore nel recupero del progetto',
+      error: error.message
+    });
+  }
+};
+
+// Middleware per gestire gli errori
+module.exports.errorHandler = (err, req, res, next) => {
+  console.error('Errore nel controller progetto:', err);
+  res.status(500).json({
+    success: false,
+    message: 'Errore interno del server',
+    error: process.env.NODE_ENV === 'development' ? err.message : undefined
+  });
+};
+
+// Crea nuovo progetto (solo admin)
+module.exports.createProject = async (req, res, next) => {
+  try {
+    console.log('Inizio createProject');
+    
+    // Se è una richiesta multipart, gestiscila manualmente
+    if (req.headers['content-type'] && req.headers['content-type'].includes('multipart/form-data')) {
+      return handleMultipartProjectCreation(req, res);
+    }
+    
+    console.log('Files ricevuti:', req.files ? req.files.length : 'nessun file');
+    console.log('Body:', Object.keys(req.body));
+    
+    // Verifica i files ricevuti per gli appartamenti
+    if (req.files && req.files.length > 0) {
+      const apartmentImageFiles = req.files.filter(file => file.fieldname === 'apartment_images');
+      console.log('Immagini appartamento trovate:', apartmentImageFiles.map(f => f.fieldname));
+    }
+
     // Log completo di tutto il body e file
     console.log('BODY COMPLETO RICEVUTO:', req.body);
     console.log('FILES:', req.files ? req.files.map(f => f.fieldname) : 'nessuno');
@@ -237,13 +650,57 @@ module.exports.createProject = async (req, res) => {
     const images = [];
     if (req.files && req.files.length > 0) {
       const projectImages = req.files.filter(file => file.fieldname === 'images');
+      
+      // Sposta i file dalla cartella temporanea alla cartella progetti
+      projectImages.forEach(file => {
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        const extension = path.extname(file.originalname);
+        const newFilename = 'project-' + uniqueSuffix + extension;
+        const projectsDir = path.join(__dirname, '../uploads/projects');
+        const newPath = path.join(projectsDir, newFilename);
+        
+        // Crea la directory se non esiste
+        if (!fs.existsSync(projectsDir)) {
+          fs.mkdirSync(projectsDir, { recursive: true });
+        }
+        
+        // Sposta il file
+        fs.renameSync(file.path, newPath);
+        
+        // Aggiorna le proprietà del file
+        file.path = newPath;
+        file.filename = newFilename;
+      });
+      
+      // Ottieni le descrizioni delle immagini se presenti
+      let imageDescriptions = {};
+      if (req.body.imageDescriptions) {
+        try {
+          const descriptions = Array.isArray(req.body.imageDescriptions) 
+            ? req.body.imageDescriptions.map(d => JSON.parse(d))
+            : [JSON.parse(req.body.imageDescriptions)];
+          
+          descriptions.forEach(desc => {
+            if (desc.filename && desc.description) {
+              imageDescriptions[desc.filename] = desc.description;
+            }
+          });
+          
+          console.log('Descrizioni immagini ricevute:', imageDescriptions);
+        } catch (e) {
+          console.error('Errore nel parsing delle descrizioni immagini:', e);
+        }
+      }
+      
       projectImages.forEach(file => {
         images.push({
           filename: file.filename,
           path: file.path,
           size: file.size,
           mimetype: file.mimetype,
-          url: `/uploads/projects/${file.filename}`
+          url: `/uploads/projects/${file.filename}`,
+          // Aggiungi la descrizione se esiste per questo file
+          description: imageDescriptions[file.originalname] || ''
         });
       });
     }
@@ -287,29 +744,54 @@ module.exports.createProject = async (req, res) => {
         // Prepara array di appartamenti
         projectData.apartments = [];
         
-        for (let i = 0; i < parsedApartments.length; i++) {
-          const apt = parsedApartments[i];
-          console.log(`Elaboro appartamento ${i}:`, apt);
+        // Gestione immagini degli appartamenti ricevute come file binari
+        const apartmentImages = req.files ? req.files.filter(file => file.fieldname === 'apartmentImages') : [];
+        console.log(`Trovate ${apartmentImages.length} immagini di appartamenti`);
+        
+        // Sposta i file degli appartamenti dalla cartella temporanea alla cartella appartamenti
+        apartmentImages.forEach(file => {
+          const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+          const extension = path.extname(file.originalname);
+          const newFilename = 'apartment-' + uniqueSuffix + extension;
+          const apartmentsDir = path.join(__dirname, '../uploads/apartments');
+          const newPath = path.join(apartmentsDir, newFilename);
           
-          // Raccogli le immagini per questo appartamento
-          const aptImages = [];
-          if (req.files && req.files.length > 0) {
-            const apartmentImageField = `apartment_${i}_image`;
-            const apartmentImages = req.files.filter(file => file.fieldname === apartmentImageField);
-            
-            apartmentImages.forEach(file => {
-              aptImages.push({
-                filename: file.filename,
-                path: file.path,
-                size: file.size,
-                mimetype: file.mimetype,
-                url: `/uploads/apartments/${file.filename}`
-              });
-            });
+          // Crea la directory se non esiste
+          if (!fs.existsSync(apartmentsDir)) {
+            fs.mkdirSync(apartmentsDir, { recursive: true });
           }
           
-          // Aggiungi l'appartamento completo
-          projectData.apartments.push({
+          // Sposta il file
+          fs.renameSync(file.path, newPath);
+          
+          // Aggiorna le proprietà del file
+          file.path = newPath;
+          file.filename = newFilename;
+        });
+        
+        // Mappa per tenere traccia dei metadati delle immagini
+        const metadataMap = {};
+        
+        // Estrai metadati delle immagini degli appartamenti
+        for (let i = 0; i < apartmentImages.length; i++) {
+          const metadataKey = `apartmentImageMetadata_${i}`;
+          if (req.body[metadataKey]) {
+            try {
+              const metadata = JSON.parse(req.body[metadataKey]);
+              metadataMap[i] = metadata;
+              console.log(`Metadati immagine ${i}:`, metadata);
+            } catch (e) {
+              console.error(`Errore parsing metadati immagine ${i}:`, e);
+            }
+          }
+        }
+        
+        // Processiamo gli appartamenti dal JSON
+        for (let i = 0; i < parsedApartments.length; i++) {
+          const apt = parsedApartments[i];
+          
+          // Creiamo la struttura base dell'appartamento
+          const apartment = {
             title: apt.title || `Appartamento ${i+1}`,
             description: apt.description || '',
             squareMeters: apt.squareMeters || 0,
@@ -317,9 +799,106 @@ module.exports.createProject = async (req, res) => {
             bedrooms: apt.bedrooms || 0,
             bathrooms: apt.bathrooms || 0,
             budget: apt.budget || 0,
-            status: apt.status || 'Disponibile',
-            images: aptImages
+            status: apt.status || 'In corso',
+            images: [] // Inizializziamo l'array delle immagini
+          };
+          
+          // Aggiungi le immagini binarie associate a questo appartamento
+          apartmentImages.forEach((file, fileIndex) => {
+            const metadata = metadataMap[fileIndex];
+            if (metadata && metadata.apartmentIndex === i) {
+              console.log(`Associando immagine ${file.filename} all'appartamento ${i}`);
+              apartment.images.push({
+                _id: new mongoose.Types.ObjectId(),
+                filename: file.filename,
+                path: file.path,
+                originalName: file.originalname,
+                mimetype: file.mimetype,
+                size: file.size,
+                url: `/uploads/apartments/${file.filename}`,
+                description: metadata.description || ''
+              });
+            }
           });
+          
+          // Se l'appartamento ha immagini, le processiamo
+          if (apt.images && Array.isArray(apt.images)) {
+            for (let j = 0; j < apt.images.length; j++) {
+              const imgData = apt.images[j];
+              // Se abbiamo un'immagine base64
+              if (imgData.data && imgData.data.startsWith('data:')) {
+                // Estraiamo il mime type e il contenuto base64
+                const matches = imgData.data.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/);
+                
+                if (matches && matches.length === 3) {
+                  const mimeType = matches[1];
+                  const base64Data = matches[2];
+                  const extension = mimeType.split('/')[1];
+                  
+                  // Generiamo un filename unico
+                  const filename = `apartment_${i}_${Date.now()}_${Math.floor(Math.random() * 1000)}.${extension}`;
+                  
+                  // Assicurati che la directory esista
+                  const uploadDir = path.join(__dirname, '../uploads/apartments');
+                  if (!fs.existsSync(uploadDir)) {
+                    fs.mkdirSync(uploadDir, { recursive: true });
+                  }
+                  
+                  const filepath = path.join(uploadDir, filename);
+                  
+                  // Salviamo il file sul disco
+                  try {
+                    const buffer = Buffer.from(base64Data, 'base64');
+                    fs.writeFileSync(filepath, buffer);
+                    
+                    // Aggiungiamo l'immagine all'appartamento con TUTTI i campi necessari
+                    apartment.images.push({
+                      filename: filename,
+                      path: filepath,
+                      size: buffer.length,
+                      mimetype: mimeType,
+                      url: `/uploads/apartments/${filename}`,
+                      description: imgData.description || ''
+                    });
+                    
+                    console.log(`Immagine salvata per l'appartamento ${i}: ${filename}`);
+                  } catch (err) {
+                    console.error(`Errore nel salvare l'immagine dell'appartamento ${i}:`, err);
+                  }
+                }
+              } else if (imgData._id) {
+                // Se abbiamo un'immagine esistente con solo ID, cerchiamo di recuperare i dati completi
+                if (existingApt && existingApt.images) {
+                  const existingImg = existingApt.images.find(img => 
+                    img._id && img._id.toString() === imgData._id.toString());
+                  
+                  if (existingImg) {
+                    // Aggiungiamo l'immagine con tutti i dati
+                    apartment.images.push({
+                      _id: existingImg._id,
+                      filename: existingImg.filename,
+                      path: existingImg.path,
+                      size: existingImg.size,
+                      mimetype: existingImg.mimetype,
+                      url: existingImg.url || `/uploads/apartments/${existingImg.filename}`,
+                      description: existingImg.description || imgData.description || ''
+                    });
+                  } else {
+                    console.warn(`Immagine con ID ${imgData._id} non trovata nell'appartamento ${i}`);
+                  }
+                }
+              } else if (imgData.filename) {
+                // Se è un'immagine già esistente con filename
+                apartment.images.push({
+                  ...imgData,
+                  url: imgData.url || `/uploads/apartments/${imgData.filename}`
+                });
+              }
+            }
+          }
+          
+          // Aggiungiamo l'appartamento al progetto
+          projectData.apartments.push(apartment);
         }
         
         // Aggiorna il numero totale di unità
@@ -364,6 +943,13 @@ module.exports.createProject = async (req, res) => {
 // Aggiorna progetto esistente (solo admin)
 module.exports.updateProject = async (req, res) => {
   try {
+    console.log('Inizio updateProject');
+    
+    // Se è una richiesta multipart, gestiscila manualmente
+    if (req.headers['content-type'] && req.headers['content-type'].includes('multipart/form-data')) {
+      return handleMultipartProjectUpdate(req, res);
+    }
+    
     console.log('Body ricevuto per update:', Object.keys(req.body));
     console.log('Files ricevuti per update:', req.files ? req.files.length : 'nessun file');
     if (req.files && req.files.length > 0) {
@@ -480,35 +1066,34 @@ module.exports.updateProject = async (req, res) => {
       // Prepara array di appartamenti
       updateData.apartments = [];
       
+      // Gestione immagini degli appartamenti ricevute come file binari
+      const apartmentImages = req.files ? req.files.filter(file => file.fieldname === 'apartmentImages') : [];
+      console.log(`UPDATE PROJECT - Trovate ${apartmentImages.length} immagini di appartamenti`);
+      
+      // Mappa per tenere traccia dei metadati delle immagini
+      const metadataMap = {};
+      
+      // Estrai metadati delle immagini degli appartamenti
+      for (let i = 0; i < apartmentImages.length; i++) {
+        const metadataKey = `apartmentImageMetadata_${i}`;
+        if (req.body[metadataKey]) {
+          try {
+            const metadata = JSON.parse(req.body[metadataKey]);
+            metadataMap[i] = metadata;
+            console.log(`UPDATE PROJECT - Metadati immagine ${i}:`, metadata);
+          } catch (e) {
+            console.error(`Errore parsing metadati immagine ${i}:`, e);
+          }
+        }
+      }
+      
       // Popoliamo ogni appartamento con i dati
       for (let i = 0; i < parsedApartments.length; i++) {
         const apt = parsedApartments[i];
         
-        // Cerca l'appartamento esistente per ID se presente
-        const existingApt = apt._id 
-          ? existingProject.apartments.find(a => a._id.toString() === apt._id.toString())
-          : null;
-        
-        // Raccogli le immagini per questo appartamento
-        const aptImages = [];
-        if (req.files && req.files.length > 0) {
-          const apartmentImageField = `apartment_${i}_image`;
-          const apartmentImages = req.files.filter(file => file.fieldname === apartmentImageField);
-          
-          apartmentImages.forEach(file => {
-            aptImages.push({
-              filename: file.filename,
-              path: file.path,
-              size: file.size,
-              mimetype: file.mimetype,
-              url: `/uploads/apartments/${file.filename}`
-            });
-          });
-        }
-        
-        // Aggiungi l'appartamento completo con immagini al progetto
-        updateData.apartments.push({
-          _id: apt._id || new mongoose.Types.ObjectId(),
+        // Creiamo la struttura base dell'appartamento
+        const apartment = {
+          _id: apt._id, // Mantieni l'ID se esiste (per update)
           title: apt.title || `Appartamento ${i+1}`,
           description: apt.description || '',
           squareMeters: apt.squareMeters || 0,
@@ -516,27 +1101,177 @@ module.exports.updateProject = async (req, res) => {
           bedrooms: apt.bedrooms || 0,
           bathrooms: apt.bathrooms || 0,
           budget: apt.budget || 0,
-          status: apt.status || 'Disponibile',
-          // Combina immagini esistenti con nuove immagini
-          images: [...(existingApt ? existingApt.images : []), ...aptImages]
+          status: apt.status || 'In corso',
+          images: apt.images || [] // Mantieni le immagini esistenti se presenti
+        };
+        
+        // Aggiungi le nuove immagini binarie associate a questo appartamento
+        apartmentImages.forEach((file, fileIndex) => {
+          const metadata = metadataMap[fileIndex];
+          if (metadata && metadata.apartmentIndex === i) {
+            console.log(`UPDATE PROJECT - Associando immagine ${file.filename} all'appartamento ${i}`);
+            apartment.images.push({
+              _id: new mongoose.Types.ObjectId(),
+              filename: file.filename,
+              path: file.path,
+              originalName: file.originalname,
+              mimetype: file.mimetype,
+              size: file.size,
+              url: `/uploads/apartments/${file.filename}`,
+              description: metadata.description || ''
+            });
+          }
         });
-      }
+        
+        // Se l'appartamento ha immagini, le processiamo
+        if (apt.images && Array.isArray(apt.images)) {
+          for (let j = 0; j < apt.images.length; j++) {
+            const imgData = apt.images[j];
+            // Se abbiamo un'immagine base64
+            if (imgData.data && imgData.data.startsWith('data:')) {
+              // Estraiamo il mime type e il contenuto base64
+              const matches = imgData.data.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/);
+              
+              if (matches && matches.length === 3) {
+                const mimeType = matches[1];
+                const base64Data = matches[2];
+                const extension = mimeType.split('/')[1];
+                
+                // Generiamo un filename unico
+                const filename = `apartment_${i}_${Date.now()}_${Math.floor(Math.random() * 1000)}.${extension}`;
+                
+                // Assicurati che la directory esista
+                const uploadDir = path.join(__dirname, '../uploads/apartments');
+                if (!fs.existsSync(uploadDir)) {
+                  fs.mkdirSync(uploadDir, { recursive: true });
+                }
+                
+                const filepath = path.join(uploadDir, filename);
+                
+                // Salviamo il file sul disco
+                try {
+                  const buffer = Buffer.from(base64Data, 'base64');
+                  fs.writeFileSync(filepath, buffer);
+                  
+                  // Aggiungiamo l'immagine all'appartamento con TUTTI i campi necessari
+                  apartment.images.push({
+                    filename: filename,
+                    path: filepath,
+                    size: buffer.length,
+                    mimetype: mimeType,
+                    url: `/uploads/apartments/${filename}`,
+                    description: imgData.description || ''
+                  });
+                  
+                  console.log(`Immagine salvata per l'appartamento ${i}: ${filename}`);
+                } catch (err) {
+                  console.error(`Errore nel salvare l'immagine dell'appartamento ${i}:`, err);
+                }
+              }
+            } else if (typeof imgData === 'object' && imgData._id) {
+                // Se abbiamo un'immagine esistente con solo ID, cerchiamo di recuperare i dati completi
+                let existingImg = null;
+                
+                // Prima cerchiamo in tutti gli appartamenti esistenti
+                if (existingProject && existingProject.apartments) {
+                  for (let k = 0; k < existingProject.apartments.length; k++) {
+                    const apt = existingProject.apartments[k];
+                    if (apt && apt.images && Array.isArray(apt.images)) {
+                      for (let m = 0; m < apt.images.length; m++) {
+                        const img = apt.images[m];
+                        if (img && img._id && img._id.toString() === imgData._id.toString()) {
+                          existingImg = img;
+                          break;
+                        }
+                      }
+                      if (existingImg) break;
+                    }
+                  }
+                }
+                
+                if (existingImg) {
+                  // Aggiungiamo l'immagine con tutti i dati
+                  apartment.images.push({
+                    _id: existingImg._id,
+                    filename: existingImg.filename,
+                    path: existingImg.path,
+                    size: existingImg.size,
+                    mimetype: existingImg.mimetype,
+                    url: existingImg.url || `/uploads/apartments/${existingImg.filename}`,
+                    description: existingImg.description || imgData.description || ''
+                  });
+                } else {
+                  console.warn(`Immagine con ID ${imgData._id} non trovata in nessun appartamento`);
+                  
+                  // Se non troviamo l'immagine in nessun appartamento, proviamo a cercarlo nelle immagini principali del progetto
+                  if (existingProject && existingProject.images && Array.isArray(existingProject.images)) {
+                    const projectImg = existingProject.images.find(img => 
+                      img._id && img._id.toString() === imgData._id.toString());
+                    
+                    if (projectImg) {
+                      apartment.images.push({
+                        _id: projectImg._id,
+                        filename: projectImg.filename,
+                        path: projectImg.path,
+                        size: projectImg.size,
+                        mimetype: projectImg.mimetype,
+                        url: projectImg.url || `/uploads/projects/${projectImg.filename}`,
+                        description: projectImg.description || imgData.description || ''
+                      });
+                    }
+                  }
+                }
+              } else if (imgData.filename) {
+                // Se è un'immagine già esistente con filename
+                apartment.images.push({
+                  ...imgData,
+                  url: imgData.url || `/uploads/apartments/${imgData.filename}`
+                });
+              }
+            }
+          }
+        
+          // Aggiungiamo l'appartamento al progetto
+          updateData.apartments.push(apartment);
+        };
       
-      // Aggiorna il numero totale di unità
-      updateData.totalUnits = updateData.apartments.length;
-    }
+        // Aggiorna il numero totale di unità
+        updateData.totalUnits = updateData.apartments.length;
+      }
     
-    // Debug
-    console.log('Update data prima dell\'aggiornamento:', JSON.stringify(updateData, null, 2));
+      // Debug
+      console.log('Update data prima dell\'aggiornamento:', JSON.stringify(updateData, null, 2));
 
-    const project = await Project.findByIdAndUpdate(
-      projectId,
-      updateData,
-      { new: true }
-    )
-    .populate('client', 'name email')
-    .populate('createdBy', 'name email')
-    .lean(); // Usa lean per ottenere un oggetto JavaScript semplice
+      const project = await Project.findByIdAndUpdate(
+        projectId,
+        updateData,
+        { new: true }
+      )
+      .populate('client', 'name email')
+      .populate('createdBy', 'name email')
+      .lean(); // Manteniamo lean per ottenere un oggetto JavaScript semplice
+
+    // Assicuriamoci che le immagini degli appartamenti abbiano URL completi
+    if (project && project.apartments && Array.isArray(project.apartments)) {
+      for (let i = 0; i < project.apartments.length; i++) {
+        const apt = project.apartments[i];
+        if (apt.images && apt.images.length > 0) {
+          for (let j = 0; j < apt.images.length; j++) {
+            const img = apt.images[j];
+            // Se l'immagine ha solo ID e filename ma non URL, aggiungi URL
+            if (img && img.filename && !img.url) {
+              img.url = `/uploads/apartments/${img.filename}`;
+            }
+            // Se l'immagine ha solo ID ma non ha né URL né filename, logghiamo un avviso
+            else if (img && img._id && !img.url && !img.filename) {
+              console.warn(`Immagine con solo ID trovata: ${img._id}, impossibile generare URL valido`);
+              // Impostiamo almeno un URL temporaneo per evitare errori nel frontend
+              img.url = `/uploads/placeholder.jpg`;
+            }
+          }
+        }
+      }
+    }
 
     console.log('Progetto aggiornato:', JSON.stringify({
       id: project._id,
@@ -711,8 +1446,11 @@ module.exports.getProjectStats = async (req, res) => {
 module.exports.addApartmentToProject = async (req, res) => {
   try {
     const { projectId } = req.params;
+    console.log(`🔄 ADD APARTMENT - Endpoint chiamato con projectId: ${projectId}`);
+    console.log(`🔄 ADD APARTMENT - Body ricevuto:`, req.body);
+    console.log(`🔄 ADD APARTMENT - Files ricevuti:`, req.files ? req.files.length : 0);
     
-    // Verifica che il progetto esista
+    // Trova il progetto
     const project = await Project.findById(projectId);
     if (!project) {
       return res.status(404).json({
@@ -728,9 +1466,141 @@ module.exports.addApartmentToProject = async (req, res) => {
         message: 'Solo i progetti multiproprietà possono avere appartamenti'
       });
     }
-
-    // Crea il nuovo appartamento
-    const newApartment = req.body;
+    
+    // ----- GESTIONE NUOVO FORMATO DATI -----
+    // Estrai i dati dell'appartamento dal campo apartmentData
+    let apartmentData;
+    
+    if (req.body.apartmentData) {
+      try {
+        // Nuovo formato: dati JSON in un campo apartmentData
+        apartmentData = JSON.parse(req.body.apartmentData);
+        console.log('🔄 ADD APARTMENT - Dati JSON ricevuti dal campo apartmentData:', apartmentData);
+      } catch (error) {
+        console.error('Errore parsing JSON apartmentData:', error);
+        return res.status(400).json({
+          success: false,
+          message: 'Formato dati non valido: apartmentData deve essere un JSON valido'
+        });
+      }
+    } else {
+      // Fallback al vecchio formato: dati direttamente nel body
+      console.log('⚠️ Usando il vecchio formato dati (direttamente da req.body)');
+      apartmentData = [req.body]; // Considera req.body come un appartamento singolo
+    }
+    
+    // Verifica se abbiamo un array (nuovo formato) o un oggetto singolo (vecchio formato)
+    if (!Array.isArray(apartmentData)) {
+      apartmentData = [apartmentData]; // Converti in array per uniformità
+    }
+    
+    // Ottieni il primo (e unico) appartamento da creare
+    const newApartment = { ...apartmentData[0] };
+    console.log(`🔄 ADD APARTMENT - Dati dell'appartamento da creare:`, newApartment);
+    
+    // Inizializza l'array delle immagini se non esiste
+    if (!newApartment.images) {
+      newApartment.images = [];
+    }
+    
+    // Processa le immagini binarie caricate
+    if (req.files && req.files.length > 0) {
+      console.log(`🔄 ADD APARTMENT - Processando ${req.files.length} immagini binarie di appartamenti`);
+      
+      // Mappa per tenere traccia dei metadati delle immagini
+      const metadataMap = {};
+      
+      // Estrai metadati delle immagini
+      for (let i = 0; i < req.files.length; i++) {
+        const metadataKey = `apartmentImageMetadata_${i}`;
+        if (req.body[metadataKey]) {
+          try {
+            const metadata = JSON.parse(req.body[metadataKey]);
+            metadataMap[i] = metadata;
+          } catch (e) {
+            console.error(`Errore parsing metadati immagine ${i}:`, e);
+          }
+        }
+      }
+      
+      // Aggiungi ogni file caricato all'array delle immagini
+      req.files.forEach((file, index) => {
+        const filename = path.basename(file.path);
+        const url = `/uploads/apartments/${filename}`;
+        
+        // Recupera i metadati associati, se esistono
+        const metadata = metadataMap[index] || {};
+        const description = metadata.description || '';
+        
+        console.log(`🔄 Aggiunta immagine binaria all'appartamento: ${filename}, descrizione: ${description}`);
+        
+        // Crea l'oggetto immagine completo
+        newApartment.images.push({
+          _id: new mongoose.Types.ObjectId(),
+          filename: filename,
+          path: file.path,
+          originalName: file.originalname,
+          mimetype: file.mimetype,
+          size: file.size,
+          url: url, // URL completo
+          description: description
+        });
+      });
+    }
+    
+    // Processa le immagini già presenti per assicurare che tutte abbiano gli attributi corretti
+    if (newApartment.images && Array.isArray(newApartment.images)) {
+      console.log(`🔄 Processando ${newApartment.images.length} immagini dell'appartamento...`);
+      
+      newApartment.images = newApartment.images.map(image => {
+        // CASO 1: Se è solo un ID o un oggetto con solo ID
+        if (typeof image === 'string') {
+          return {
+            _id: image,
+            filename: `apartment_image_${image}.jpg`,
+            mimetype: 'image/jpeg',
+            url: `/uploads/apartments/apartment_image_${image}.jpg`,
+            description: ''
+          };
+        }
+        
+        // CASO 3: Se l'immagine non ha URL ma ha filename
+        if (image && image.filename && !image.url) {
+          return {
+            ...image,
+            url: `/uploads/apartments/${image.filename}`
+          };
+        }
+        
+        // CASO 4: Se l'immagine non ha URL ma ha _id
+        if (image && image._id && !image.url) {
+          const imageId = typeof image._id === 'string' ? image._id : image._id.toString();
+          return {
+            ...image,
+            filename: image.filename || `apartment_image_${imageId}.jpg`,
+            url: `/uploads/apartments/${image.filename || `apartment_image_${imageId}.jpg`}`,
+            mimetype: image.mimetype || 'image/jpeg',
+            description: image.description || ''
+          };
+        }
+        
+        // CASO 5: Per qualsiasi altro oggetto immagine, assicuriamo che abbia un URL
+        if (image && typeof image === 'object' && !image.url) {
+          const idStr = image._id ? (typeof image._id === 'string' ? image._id : image._id.toString()) : 'unknown';
+          console.log(`⚠️ IMMAGINE SENZA URL: ${idStr} - Generando URL`);
+          
+          return {
+            ...image,
+            filename: image.filename || `apartment_image_${idStr}.jpg`,
+            url: `/uploads/apartments/${image.filename || `apartment_image_${idStr}.jpg`}`,
+            mimetype: image.mimetype || 'image/jpeg',
+            description: image.description || ''
+          };
+        }
+        
+        return image;
+      }).filter(Boolean); // Rimuovi eventuali null che potrebbero essere stati creati
+    }
     
     // Aggiungi l'appartamento al progetto
     project.apartments.push(newApartment);
@@ -738,11 +1608,15 @@ module.exports.addApartmentToProject = async (req, res) => {
     
     await project.save();
     
+    // Usa standardizeProjectResponse per garantire che tutte le immagini abbiano URL completi
+    const standardizedProject = standardizeProjectResponse(project.toObject());
+    
     res.status(201).json({
       success: true,
       message: 'Appartamento aggiunto con successo',
-      apartment: project.apartments[project.apartments.length - 1],
-      project: standardizeProjectResponse(project)
+      apartment: standardizedProject.apartments[standardizedProject.apartments.length - 1],
+      project: standardizedProject,
+      projectType: project.projectType // Aggiungiamo esplicitamente projectType
     });
   } catch (error) {
     console.error('Errore nell\'aggiunta dell\'appartamento:', error);
@@ -758,7 +1632,14 @@ module.exports.addApartmentToProject = async (req, res) => {
 module.exports.updateApartment = async (req, res) => {
   try {
     const { projectId, apartmentId } = req.params;
-    const updateData = req.body;
+    
+    console.log(`🔄 UPDATE APARTMENT - Endpoint chiamato con projectId: ${projectId}, apartmentId: ${apartmentId}`);
+    console.log(`🔄 UPDATE APARTMENT - Files ricevuti:`, req.files ? req.files.length : 0);
+    
+    // Estrai i dati dell'appartamento dal form
+    const updateData = req.body.apartmentData ? JSON.parse(req.body.apartmentData) : {};
+    
+    console.log(`🔄 UPDATE APARTMENT - Dati JSON ricevuti:`, updateData);
     
     // Cerca il progetto
     const project = await Project.findById(projectId);
@@ -778,6 +1659,120 @@ module.exports.updateApartment = async (req, res) => {
       });
     }
     
+    // Se ci sono file caricati (immagini), aggiungile all'appartamento
+    if (req.files && req.files.length > 0) {
+      console.log(`🔄 UPDATE APARTMENT - Processando ${req.files.length} immagini binarie di appartamenti...`);
+      
+      // Inizializza l'array delle immagini se non esiste
+      if (!updateData.images) {
+        updateData.images = [...(project.apartments[apartmentIndex].images || [])];
+      }
+      
+      // Mappa per tenere traccia dei metadati delle immagini
+      const metadataMap = {};
+      
+      // Estrai metadati delle immagini
+      for (let i = 0; i < req.files.length; i++) {
+        const metadataKey = `apartmentImageMetadata_${i}`;
+        if (req.body[metadataKey]) {
+          try {
+            const metadata = JSON.parse(req.body[metadataKey]);
+            metadataMap[i] = metadata;
+          } catch (e) {
+            console.error(`Errore parsing metadati immagine ${i}:`, e);
+          }
+        }
+      }
+      
+      // Aggiungi ogni file caricato all'array delle immagini
+      req.files.forEach((file, index) => {
+        const filename = path.basename(file.path);
+        const url = `/uploads/apartments/${filename}`;
+        
+        // Recupera i metadati associati, se esistono
+        const metadata = metadataMap[index] || {};
+        const description = metadata.description || '';
+        
+        console.log(`🔄 UPDATE APARTMENT - Aggiunta immagine binaria: ${filename}, descrizione: ${description}`);
+        
+        // Aggiungi l'immagine con tutti i metadati necessari
+        updateData.images.push({
+          _id: new mongoose.Types.ObjectId(),
+          filename: filename,
+          path: file.path,
+          originalName: file.originalname,
+          description: description,
+          mimetype: file.mimetype,
+          size: file.size,
+          url: url // URL completo
+        });
+      });
+    }
+    
+    // Processa eventuali immagini già presenti nell'oggetto
+    if (updateData.images && Array.isArray(updateData.images)) {
+      updateData.images = updateData.images.map(image => {
+        // CASO 1: Se è solo un ID o un oggetto con solo ID
+        if (typeof image === 'string') {
+          return {
+            _id: image,
+            filename: `apartment_image_${image}.jpg`,
+            mimetype: 'image/jpeg',
+            url: `/uploads/apartments/apartment_image_${image}.jpg`,
+            description: ''
+          };
+        }
+        
+        // CASO 2: Se è un oggetto con solo ID
+        if (image && image._id && Object.keys(image).length === 1) {
+          const imageId = typeof image._id === 'string' ? image._id : image._id.toString();
+          return {
+            _id: image._id,
+            filename: `apartment_image_${imageId}.jpg`,
+            mimetype: 'image/jpeg',
+            url: `/uploads/apartments/apartment_image_${imageId}.jpg`,
+            description: ''
+          };
+        }
+        
+        // CASO 3: Se l'immagine non ha URL ma ha filename
+        if (image && image.filename && !image.url) {
+          return {
+            ...image,
+            url: `/uploads/apartments/${image.filename}`
+          };
+        }
+        
+        // CASO 4: Se l'immagine non ha URL ma ha _id
+        if (image && image._id && !image.url) {
+          const imageId = typeof image._id === 'string' ? image._id : image._id.toString();
+          return {
+            ...image,
+            filename: image.filename || `apartment_image_${imageId}.jpg`,
+            url: `/uploads/apartments/${image.filename || `apartment_image_${imageId}.jpg`}`,
+            mimetype: image.mimetype || 'image/jpeg',
+            description: image.description || ''
+          };
+        }
+        
+        // CASO 5: Per qualsiasi altro oggetto immagine, assicuriamo che abbia un URL
+        if (image && typeof image === 'object' && !image.url) {
+          const idStr = image._id ? (typeof image._id === 'string' ? image._id : image._id.toString()) : 'unknown';
+          console.log(`⚠️ UPDATE APARTMENT - IMMAGINE SENZA URL: ${idStr} - Generando URL`);
+          
+          return {
+            ...image,
+            filename: image.filename || `apartment_image_${idStr}.jpg`,
+            url: `/uploads/apartments/${image.filename || `apartment_image_${idStr}.jpg`}`,
+            mimetype: image.mimetype || 'image/jpeg',
+            description: image.description || ''
+          };
+        }
+        
+        return image;
+      }).filter(Boolean); // Rimuovi eventuali null che potrebbero essere stati creati
+    }
+    
     // Aggiorna i campi dell'appartamento
     Object.keys(updateData).forEach(key => {
       project.apartments[apartmentIndex][key] = updateData[key];
@@ -785,11 +1780,15 @@ module.exports.updateApartment = async (req, res) => {
     
     await project.save();
     
+    // Standardizza la risposta
+    const standardizedProject = standardizeProjectResponse(project.toObject());
+    
     res.json({
       success: true,
       message: 'Appartamento aggiornato con successo',
-      apartment: project.apartments[apartmentIndex],
-      project: standardizeProjectResponse(project)
+      apartment: standardizedProject.apartments[apartmentIndex],
+      project: standardizedProject,
+      projectType: project.projectType
     });
   } catch (error) {
     console.error('Errore nell\'aggiornamento dell\'appartamento:', error);
@@ -800,6 +1799,11 @@ module.exports.updateApartment = async (req, res) => {
     });
   }
 };
+
+// MIDDLEWARE MULTER RIMOSSO - ora gestito manualmente con busboy
+// uploadApartmentImages non più necessario
+
+// MIDDLEWARE MULTER LEGACY RIMOSSO - ora tutto gestito manualmente con busboy
 
 // Elimina un appartamento
 module.exports.deleteApartment = async (req, res) => {
@@ -854,9 +1858,6 @@ module.exports.deleteApartment = async (req, res) => {
   }
 };
 
-// Middleware per upload immagini appartamento
-module.exports.uploadApartmentImages = upload.array('images', 10);
-
 // Aggiungi immagini a un appartamento
 module.exports.addApartmentImages = async (req, res) => {
   try {
@@ -904,20 +1905,50 @@ module.exports.addApartmentImages = async (req, res) => {
     
     // Aggiungi le immagini all'appartamento
     files.forEach(file => {
+      // Cerca le descrizioni per questa immagine dell'appartamento
+      let description = '';
+      const imageDescField = `apartment_${apartmentIndex}_image_description`;
+      
+      if (req.body[imageDescField]) {
+        try {
+          const descData = JSON.parse(req.body[imageDescField]);
+          if (descData.filename === file.originalname && descData.description) {
+            description = descData.description;
+          }
+        } catch (e) {
+          console.error(`Errore nel parsing della descrizione dell'immagine dell'appartamento ${apartmentIndex}:`, e);
+        }
+      }
+      
+      // Ottieni il filename e costruisci l'URL
+      const filename = path.basename(file.path);
+      const url = `/uploads/apartments/${filename}`;
+      
+      // Log per debug
+      console.log(`✅ Aggiunta immagine all'appartamento ${apartmentId}: filename=${filename}, url=${url}`);
+      
+      // Salva l'immagine con TUTTI i campi necessari, incluso URL
       project.apartments[apartmentIndex].images.push({
-        filename: path.basename(file.path),
+        filename: filename,
         path: file.path,
-        originalName: file.originalname
+        originalName: file.originalname,
+        description: description,
+        mimetype: file.mimetype,
+        size: file.size,
+        url: url // Aggiungi l'URL completo qui!
       });
     });
     
     await project.save();
     
+    // Usa standardizeProjectResponse per garantire che tutte le immagini abbiano URL completi
+    const standardizedProject = standardizeProjectResponse(project.toObject());
+    
     res.status(201).json({
       success: true,
       message: 'Immagini aggiunte con successo',
-      apartment: project.apartments[apartmentIndex],
-      project: standardizeProjectResponse(project)
+      apartment: standardizedProject.apartments[apartmentIndex],
+      project: standardizedProject
     });
   } catch (error) {
     console.error('Errore nell\'aggiunta delle immagini:', error);
@@ -968,7 +1999,7 @@ module.exports.deleteApartmentImage = async (req, res) => {
         message: 'Immagine non trovata'
       });
     }
-    
+
     const image = project.apartments[apartmentIndex].images[imageIndex];
     
     // Elimina il file fisico
@@ -998,19 +2029,215 @@ module.exports.deleteApartmentImage = async (req, res) => {
 
 // Funzione helper per standardizzare le risposte dei progetti
 const standardizeProjectResponse = (project) => {
-  // Se è già un oggetto JavaScript (non un documento Mongoose)
-  if (!project.toObject && !project.toJSON) {
-    return project;
+  if (!project) return null;
+  
+  // Crea una copia del progetto
+  const standardizedProject = JSON.parse(JSON.stringify(project));
+  
+  // Processa tutte le immagini degli appartamenti
+  if (standardizedProject.apartments && Array.isArray(standardizedProject.apartments)) {
+    standardizedProject.apartments.forEach(apartment => {
+      if (apartment.images && Array.isArray(apartment.images)) {
+        apartment.images = apartment.images.map(image => {
+          // CASO 1: Se è solo un ID o un oggetto con solo ID
+          if (typeof image === 'string') {
+            console.log(`⚠️ TROVATO ID STRINGA: ${image} - Convertendo in oggetto completo`);
+            return {
+              _id: image,
+              filename: `apartment_image_${image}.jpg`,
+              mimetype: 'image/jpeg',
+              url: `/uploads/apartments/apartment_image_${image}.jpg`,
+              description: ''
+            };
+          }
+          
+          // CASO 2: Se è un oggetto con solo ID
+          if (image && image._id && Object.keys(image).length === 1) {
+            console.log(`⚠️ TROVATO OGGETTO CON SOLO ID: ${image._id} - Convertendo in oggetto completo`);
+            return {
+              _id: image._id,
+              filename: `apartment_image_${image._id}.jpg`,
+              mimetype: 'image/jpeg',
+              url: `/uploads/apartments/apartment_image_${image._id}.jpg`,
+              description: ''
+            };
+          }
+          
+          // CASO 3: Se l'immagine contiene dati base64, salvarla su disco
+          if (image && image.data && typeof image.data === 'string' && image.data.startsWith('data:')) {
+            try {
+              console.log(`Trovata immagine base64 nel DB per appartamento - salvando su disco`);
+              // Estraiamo il mime type e il contenuto base64
+              const matches = image.data.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/);
+              
+              if (matches && matches.length === 3) {
+                const mimeType = matches[1];
+                const base64Data = matches[2];
+                const extension = mimeType.split('/')[1];
+                
+                // Generiamo un filename unico
+                const filename = `apartment_fix_${Date.now()}_${Math.floor(Math.random() * 1000)}.${extension}`;
+                
+                // Assicurati che la directory esista
+                const uploadDir = path.join(__dirname, '../uploads/apartments');
+                if (!fs.existsSync(uploadDir)) {
+                  fs.mkdirSync(uploadDir, { recursive: true });
+                }
+                
+                const filepath = path.join(uploadDir, filename);
+                
+                // Salviamo il file sul disco
+                const buffer = Buffer.from(base64Data, 'base64');
+                fs.writeFileSync(filepath, buffer);
+                
+                // Sostituiamo il dato base64 con il riferimento al file
+                return {
+                  _id: image._id || new mongoose.Types.ObjectId(),
+                  filename: filename,
+                  path: filepath,
+                  size: buffer.length,
+                  mimetype: mimeType,
+                  url: `/uploads/apartments/${filename}`,
+                  description: image.description || ''
+                };
+              }
+            } catch (err) {
+              console.error('Errore nel convertire immagine base64 a file:', err);
+            }
+          }
+
+          // CASO 4: Se l'immagine ha solo _id senza url
+          if (image && image._id && !image.url) {
+            const imageId = typeof image._id === 'string' ? image._id : image._id.toString();
+            console.log(`⚠️ TROVATA IMMAGINE SENZA URL: ${imageId} - Aggiungendo URL`);
+            
+            return {
+              ...image,
+              filename: image.filename || `apartment_image_${imageId}.jpg`,
+              url: `/uploads/apartments/${image.filename || `apartment_image_${imageId}.jpg`}`,
+              mimetype: image.mimetype || 'image/jpeg',
+              description: image.description || ''
+            };
+          }
+          
+          // CASO 5: Se l'immagine ha un filename ma non un URL
+          if (image && image.filename && !image.url) {
+            return {
+              ...image,
+              url: `/uploads/apartments/${image.filename}`
+            };
+          }
+          
+          // CASO 6: Se l'immagine non ha né URL né filename ma ha _id
+          if (image && image._id && !image.url && !image.filename) {
+            const imageId = typeof image._id === 'string' ? image._id : image._id.toString();
+            console.log(`⚠️ IMMAGINE SENZA URL NÉ FILENAME: ${imageId} - Generando entrambi`);
+            
+            return {
+              ...image,
+              filename: `apartment_image_${imageId}.jpg`,
+              url: `/uploads/apartments/apartment_image_${imageId}.jpg`,
+              mimetype: image.mimetype || 'image/jpeg',
+              description: image.description || ''
+            };
+          }
+          
+          // CASO 7: Se per qualche motivo arriviamo qui senza un oggetto valido
+          if (!image || typeof image !== 'object') {
+            console.error(`⚠️ IMMAGINE INVALIDA:`, image);
+            return null;
+          }
+          
+          // CASO 8: Se arriviamo qui e l'immagine non ha URL per qualsiasi motivo
+          if (!image.url) {
+            const idStr = image._id ? (typeof image._id === 'string' ? image._id : image._id.toString()) : 'unknown';
+            console.log(`⚠️ ULTIMO CONTROLLO - IMMAGINE SENZA URL: ${idStr} - Generando URL`);
+            
+            return {
+              ...image,
+              filename: image.filename || `apartment_image_${idStr}.jpg`,
+              url: `/uploads/apartments/${image.filename || `apartment_image_${idStr}.jpg`}`,
+              mimetype: image.mimetype || 'image/jpeg'
+            };
+          }
+          
+          return image;
+        }).filter(Boolean); // Rimuovi eventuali null che potrebbero essere stati creati
+      }
+    });
   }
   
-  // Converti in oggetto JavaScript se è un documento Mongoose
-  const projectObj = project.toObject ? project.toObject() : project.toJSON();
-  
-  // Assicurati che projectType sia sempre definito
-  if (!projectObj.projectType) {
-    console.log(`ATTENZIONE: Progetto ${projectObj._id} (${projectObj.title}) senza projectType. Impostato a 'Singola'.`);
-    projectObj.projectType = 'Singola';
+  // Processa anche le immagini del progetto principale
+  if (standardizedProject.images && Array.isArray(standardizedProject.images)) {
+    standardizedProject.images = standardizedProject.images.map(image => {
+      // CASO 1: Se è solo un ID o un oggetto con solo ID
+      if (typeof image === 'string') {
+        console.log(`⚠️ TROVATO ID STRINGA PROGETTO: ${image} - Convertendo in oggetto completo`);
+        return {
+          _id: image,
+          filename: `project_image_${image}.jpg`,
+          mimetype: 'image/jpeg',
+          url: `/uploads/projects/project_image_${image}.jpg`,
+          description: ''
+        };
+      }
+      
+      // CASO 2: Se è un oggetto con solo ID
+      if (image && image._id && Object.keys(image).length === 1) {
+        console.log(`⚠️ TROVATO OGGETTO PROGETTO CON SOLO ID: ${image._id} - Convertendo in oggetto completo`);
+        return {
+          _id: image._id,
+          filename: `project_image_${image._id}.jpg`,
+          mimetype: 'image/jpeg',
+          url: `/uploads/projects/project_image_${image._id}.jpg`,
+          description: ''
+        };
+      }
+      
+      // CASO 3: Se l'immagine ha solo _id senza url
+      if (image && image._id && !image.url) {
+        const imageId = typeof image._id === 'string' ? image._id : image._id.toString();
+        console.log(`⚠️ TROVATA IMMAGINE PROGETTO SENZA URL: ${imageId} - Aggiungendo URL`);
+        
+        return {
+          ...image,
+          filename: image.filename || `project_image_${imageId}.jpg`,
+          url: `/uploads/projects/${image.filename || `project_image_${imageId}.jpg`}`,
+          mimetype: image.mimetype || 'image/jpeg',
+          description: image.description || ''
+        };
+      }
+      
+      // CASO 4: Se l'immagine ha un filename ma non un URL
+      if (image && image.filename && !image.url) {
+        return {
+          ...image,
+          url: `/uploads/projects/${image.filename}`
+        };
+      }
+      
+      // CASO 5: Se l'immagine è già completa, restituiscila così com'è
+      if (image && image.url && image.filename) {
+        return image;
+      }
+      
+      // CASO 6: Se l'immagine non ha né URL né filename ma ha _id
+      if (image && image._id && !image.url && !image.filename) {
+        const imageId = typeof image._id === 'string' ? image._id : image._id.toString();
+        console.log(`⚠️ IMMAGINE PROGETTO SENZA URL NÉ FILENAME: ${imageId} - Generando entrambi`);
+        
+        return {
+          ...image,
+          filename: `project_image_${imageId}.jpg`,
+          url: `/uploads/projects/project_image_${imageId}.jpg`,
+          mimetype: image.mimetype || 'image/jpeg',
+          description: image.description || ''
+        };
+      }
+      
+      return image;
+    }).filter(Boolean); // Rimuovi eventuali immagini null/undefined
   }
   
-  return projectObj;
+  return standardizedProject;
 };

@@ -5,9 +5,8 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faMapMarkerAlt, faCalendarAlt, faExclamationTriangle } from '@fortawesome/free-solid-svg-icons';
 import PageHeader from '../components/common/PageHeader';
 import './Progetti.css';
+import { API_URL } from '../config';
 
-// API base URL
-const API_URL = 'https://csv-backend-yg2x.onrender.com';
 
 const Progetti = () => {
   // Stato per i progetti e filtri
@@ -15,6 +14,46 @@ const Progetti = () => {
   const [filtroAttivo, setFiltroAttivo] = useState('tutti');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  // Fallback per errori di caricamento immagini senza causare loop
+  const handleImageError = (e) => {
+    e.target.onerror = null; // Previene loop infiniti
+    // Usa un'immagine SVG base64 incorporata
+    e.target.src = "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgZmlsbD0iI2VlZWVlZSIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LWZhbWlseT0iQXJpYWwsIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMTQiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZpbGw9IiM5OTk5OTkiPkltbWFnaW5lIG5vbiBkaXNwb25pYmlsZTwvdGV4dD48L3N2Zz4=";
+  };
+
+  // Ottiene l'URL dell'immagine senza causare errori o loop
+  const getProjectImageUrl = (project) => {
+    // Se il progetto non ha immagini
+    if (!project || !project.images || project.images.length === 0) {
+      return "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgZmlsbD0iI2VlZWVlZSIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LWZhbWlseT0iQXJpYWwsIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMTQiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZpbGw9IiM5OTk5OTkiPkltbWFnaW5lIG5vbiBkaXNwb25pYmlsZTwvdGV4dD48L3N2Zz4=";
+    }
+    
+    const image = project.images[0];
+    
+    // Se l'immagine è una stringa (solo filename)
+    if (typeof image === 'string') {
+      return `${API_URL}/uploads/projects/${image}`;
+    }
+    
+    // Se l'immagine ha un URL
+    if (image.url) {
+      return `${API_URL}${image.url}`;
+    }
+    
+    // Se l'immagine ha un filename
+    if (image.filename) {
+      return `${API_URL}/uploads/${image.filename}`;
+    }
+    
+    // Se l'immagine ha solo ID (problema)
+    if (image._id) {
+      return "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgZmlsbD0iI2VlZWVlZSIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LWZhbWlseT0iQXJpYWwsIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMTQiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZpbGw9IiM5OTk5OTkiPkltbWFnaW5lIG5vbiBkaXNwb25pYmlsZTwvdGV4dD48L3N2Zz4=";
+    }
+    
+    // Fallback finale
+    return "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgZmlsbD0iI2VlZWVlZSIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LWZhbWlseT0iQXJpYWwsIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMTQiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZpbGw9IiM5OTk5OTkiPkltbWFnaW5lIG5vbiBkaXNwb25pYmlsZTwvdGV4dD48L3N2Zz4=";
+  };
 
   // Fetch dei progetti dall'API
   useEffect(() => {
@@ -62,9 +101,7 @@ const Progetti = () => {
     );
   });
 
-  useEffect(() => {
-    console.log(progettiFiltered, 'proj')
-  },[progettiFiltered]);
+
 
   return (
     <>
@@ -147,25 +184,12 @@ const Progetti = () => {
                 <Col lg={4} md={6} key={project._id} className="mb-4">
                   <Card className="project-card h-100">
                     <div className="project-image">
-                      {project.images && project.images.length > 0 ? (
-                        <Card.Img 
-                          variant="top" 
-                          src={`${API_URL}/uploads/${project.images[0].filename}`} 
-                          alt={project.title} 
-                          onError={(e) => {
-                            // Previene il loop infinito impostando onerror a null
-                            e.target.onerror = null;
-                            // Usa un'immagine locale o una base64 invece di un URL esterno
-                            e.target.src = "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgZmlsbD0iI2VlZWVlZSIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LWZhbWlseT0iQXJpYWwsIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMTQiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZpbGw9IiM5OTk5OTkiPkltbWFnaW5lIG5vbiBkaXNwb25pYmlsZTwvdGV4dD48L3N2Zz4=";
-                          }}
-                        />
-                      ) : (
-                        <Card.Img 
-                          variant="top" 
-                          src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgZmlsbD0iI2VlZWVlZSIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LWZhbWlseT0iQXJpYWwsIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMTQiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZpbGw9IiM5OTk5OTkiPkltbWFnaW5lIG5vbiBkaXNwb25pYmlsZTwvdGV4dD48L3N2Zz4=" 
-                          alt={project.title} 
-                        />
-                      )}
+                      <Card.Img 
+                        variant="top" 
+                        src={getProjectImageUrl(project)} 
+                        alt={project.title} 
+                        onError={handleImageError}
+                      />
                       <div className="project-overlay">
                         <Link to={`/progetti/${project._id}`} className="btn btn-light">
                           Vedi Dettagli
@@ -175,28 +199,47 @@ const Progetti = () => {
                     </div>
                     <Card.Body>
                       <Card.Title>{project.title}</Card.Title>
-                      <Card.Text>
-                        {project.description && project.description.length > 100 
-                          ? project.description.substring(0, 100) + '...' 
-                          : project.description}
-                      </Card.Text>
-                      <div className="project-meta">
-                        {project.location && (
-                          <div className="meta-item">
-                            <FontAwesomeIcon icon={faMapMarkerAlt} />
-                            <span>{project.location}</span>
+                      
+                      {/* Tutte le informazioni in un'unica sezione */}
+                      <div className="project-info-unified mb-3">
+                        {project.description && (
+                          <Card.Text className="mb-2">
+                            {project.description && project.description.length > 100 
+                              ? project.description.substring(0, 100) + '...' 
+                              : project.description}
+                          </Card.Text>
+                        )}
+                        
+                        {/* Nuovo campo descrizione (foto) */}
+                        {project.images && project.images.length > 0 && project.images[0].description && (
+                          <div className="image-description mb-2">
+                            <strong>Descrizione foto:</strong> {project.images[0].description}
                           </div>
                         )}
-                        {project.year && (
-                          <div className="meta-item">
-                            <FontAwesomeIcon icon={faCalendarAlt} />
-                            <span>{project.year}</span>
-                          </div>
-                        )}
+                        
+                        <div className="project-meta mt-2">
+                          {project.location && (
+                            <div className="meta-item">
+                              <FontAwesomeIcon icon={faMapMarkerAlt} className="me-1" />
+                              <span>{project.location}</span>
+                            </div>
+                          )}
+                          {project.startDate && (
+                            <div className="meta-item">
+                              <FontAwesomeIcon icon={faCalendarAlt} className="me-1" />
+                              <span>{new Date(project.startDate).getFullYear()}</span>
+                            </div>
+                          )}
+                          {project.projectType && (
+                            <div className="meta-item">
+                              <span className="badge bg-info me-1">{project.projectType}</span>
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </Card.Body>
                     <Card.Footer>
-                      <Link to={`/progetti/${project._id}`} className="btn btn-outline-primary btn-block">
+                      <Link to={`/progetti/${project._id}`} className="btn btn-primary w-100">
                         Scopri di più
                       </Link>
                     </Card.Footer>

@@ -8,6 +8,7 @@ import {
     faClock,
     faCalendarAlt
 } from '@fortawesome/free-solid-svg-icons';
+import { API_URL } from '../../config';
 
 const AdminStats = () => {
     const [stats, setStats] = useState({
@@ -31,27 +32,27 @@ const AdminStats = () => {
             const token = localStorage.getItem('token');
 
             // Fetch basic statistics
-            const clientsResponse = await fetch('https://csv-backend-yg2x.onrender.com/api/admin/clients/stats', {
+            const clientsResponse = await fetch(`${API_URL}/api/admin/clients/stats`, {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
             });
             
-            const projectsResponse = await fetch('https://csv-backend-yg2x.onrender.com/api/admin/projects/stats', {
+            const projectsResponse = await fetch(`${API_URL}/api/admin/projects/stats`, {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
             });
             
             // Fetch recent projects
-            const recentProjectsResponse = await fetch('https://csv-backend-yg2x.onrender.com/api/admin/projects?limit=5&sort=updatedAt', {
+            const recentProjectsResponse = await fetch(`${API_URL}/api/admin/projects?limit=5&sort=updatedAt`, {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
             });
             
             // Fetch recent clients
-            const recentClientsResponse = await fetch('https://csv-backend-yg2x.onrender.com/api/admin/clients?limit=5&sort=createdAt', {
+            const recentClientsResponse = await fetch(`${API_URL}/api/admin/clients?limit=5&sort=createdAt`, {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }

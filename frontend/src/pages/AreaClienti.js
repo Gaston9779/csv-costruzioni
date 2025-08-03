@@ -6,6 +6,7 @@ import { faUser, faLock, faShieldAlt, faFileAlt, faDownload, faClipboardList, fa
 import PageHeader from '../components/common/PageHeader';
 import AdminDashboard from './admin/AdminDashboard';
 import './AreaClienti.css';
+import { API_URL } from '../config';
 
 const AreaClienti = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -54,13 +55,13 @@ const AreaClienti = () => {
       
       // Carica progetti e documenti in parallelo
       Promise.all([
-        fetch('https://csv-backend-yg2x.onrender.com/api/client/projects', {
+        fetch(`${API_URL}/api/client/projects`, {
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('token')}`
           }
         }).then(res => res.json()),
         
-        fetch('https://csv-backend-yg2x.onrender.com/api/client/documents', {
+        fetch(`${API_URL}/api/client/documents`, {
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('token')}`
           }
@@ -93,7 +94,7 @@ const AreaClienti = () => {
   // Verifica validità token
   const verifyToken = async (token) => {
     try {
-      const response = await fetch('https://csv-backend-yg2x.onrender.com/api/auth/verify', {
+      const response = await fetch(`${API_URL}/api/auth/verify`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -115,7 +116,7 @@ const AreaClienti = () => {
     setLoginError('');
 
     try {
-      const response = await fetch('https://csv-backend-yg2x.onrender.com/api/auth/login', {
+      const response = await fetch(`${API_URL}/api/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Card, Button, Form, Row, Col, Accordion, Badge, Alert } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPlus, faTrash, faBuilding, faBed, faBath, faRulerCombined, faEuroSign } from '@fortawesome/free-solid-svg-icons';
+import { API_URL } from '../config';
 
 /**
  * Componente per la gestione degli appartamenti nei progetti multiproprietà.
@@ -27,7 +28,7 @@ const ApartmentManager = ({ apartments = [], onChange, readOnly = false }) => {
       bedrooms: '',
       bathrooms: '',
       budget: '',
-      status: 'Disponibile',
+      status: 'In corso', // Cambiato da 'Disponibile' a 'In corso' per rispettare l'enum del backend
       images: [],
       newImages: [] // Array per tenere traccia delle nuove immagini
     };
@@ -222,16 +223,19 @@ const ApartmentForm = ({ apartment, onChange, onRemove, onRemoveImage }) => {
   // Gestisce il caricamento delle immagini
   const handleImageUpload = (e) => {
     if (e.target.files && e.target.files.length > 0) {
-      const newImages = Array.from(e.target.files).map(file => {
-        // Crea un oggetto URL per l'anteprima
-        return {
-          file,
-          preview: URL.createObjectURL(file),
-          name: file.name,
-          type: file.type,
-          size: file.size
-        };
-      });
+      const files = Array.from(e.target.files);
+      
+      // Creiamo direttamente gli oggetti newImages con i file binari effettivi
+      const newImages = files.map(file => ({
+        file: file, // Questo è il file binario reale
+        preview: URL.createObjectURL(file),
+        name: file.name,
+        type: file.type,
+        size: file.size,
+        description: ''
+      }));
+      
+      console.log('File caricati:', newImages);
       
       // Aggiungiamo le nuove immagini all'array newImages dell'appartamento
       const currentNewImages = apartment.newImages || [];
@@ -377,6 +381,24 @@ const ApartmentForm = ({ apartment, onChange, onRemove, onRemoveImage }) => {
                       <FontAwesomeIcon icon={faTrash} />
                     </Button>
                   </div>
+                  {/* Campo per aggiungere una descrizione all'immagine */}
+                  <Form.Group className="mt-1 mb-3">
+                    <Form.Control
+                      type="text"
+                      placeholder="Descrizione immagine"
+                      size="sm"
+                      value={image.description || ''}
+                      onChange={(e) => {
+                        // Aggiorna la descrizione dell'immagine
+                        const updatedImages = [...apartment.newImages];
+                        updatedImages[idx] = {
+                          ...updatedImages[idx],
+                          description: e.target.value
+                        };
+                        onChange('newImages', updatedImages);
+                      }}
+                    />
+                  </Form.Group>
                 </Col>
               ))}
             </Row>
@@ -392,7 +414,7 @@ const ApartmentForm = ({ apartment, onChange, onRemove, onRemoveImage }) => {
                 <Col key={`existing_${idx}`} xs={6} md={4} lg={3} className="mb-3">
                   <div className="image-preview-container">
                     <img 
-                      src={`https://csv-backend-yg2x.onrender.com${image.url}`} 
+                      src={`${API_URL}${image.url}`} 
                       alt={`Immagine ${idx + 1}`}
                       className="img-thumbnail"
                     />

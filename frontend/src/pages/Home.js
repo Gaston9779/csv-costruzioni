@@ -6,6 +6,7 @@ import { faCheckCircle, faPlus, faCalendarAlt, faMapMarkerAlt } from '@fortaweso
 import ServicesSection from '../components/home/ServicesSection';
 import CookieConsent from '../components/common/CookieConsent';
 import './Home.css';
+import { API_URL } from '../config';
 
 // Immagini Unsplash per sostituire quelle mancanti
 const heroImageUrl = "https://images.unsplash.com/photo-1541123437800-1bb1317badc2?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80";
@@ -15,7 +16,7 @@ const testimonial2Url = "https://images.unsplash.com/photo-1494790108377-be9c29b
 const testimonial3Url = "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-1.2.1&auto=format&fit=crop&w=634&q=80";
 
 // API base URL
-const API_URL = 'https://csv-backend-yg2x.onrender.com';
+
 
 const Home = () => {
   const [featuredProjects, setFeaturedProjects] = useState([]);

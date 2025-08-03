@@ -20,6 +20,7 @@ import {
   faEuroSign
 } from '@fortawesome/free-solid-svg-icons';
 import ApartmentManager from '../../components/ApartmentManager';
+import { API_URL } from '../../config';
 
 const AdminProjects = ({ onStatsUpdate }) => {
 
@@ -72,14 +73,14 @@ const AdminProjects = ({ onStatsUpdate }) => {
     setError('');
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('https://csv-backend-yg2x.onrender.com/api/admin/projects', {
+      const response = await fetch(`${API_URL}/api/admin/projects`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
       });
-      
+
       const data = await response.json();
-      
+
       if (data.success) {
         setProjects(data.projects);
       } else {
@@ -97,14 +98,14 @@ const AdminProjects = ({ onStatsUpdate }) => {
   const fetchClients = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('https://csv-backend-yg2x.onrender.com/api/admin/clients', {
+      const response = await fetch(`${API_URL}/api/admin/clients`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
       });
-      
+
       const data = await response.json();
-      
+
       if (data.success) {
         setClients(data.localClients);
       } else {
@@ -139,7 +140,7 @@ const AdminProjects = ({ onStatsUpdate }) => {
 
     return () => {
       // Cleanup quando il componente viene smontato
-     
+
       window.AdminProjectsRefresh = null;
     };
   }, []);
@@ -163,10 +164,10 @@ const AdminProjects = ({ onStatsUpdate }) => {
 
     try {
       const token = localStorage.getItem('token');
-      
+
       // Aggiungiamo parametri timestamp per evitare caching
       const timestamp = new Date().getTime();
-      const response = await fetch(`https://csv-backend-yg2x.onrender.com/api/admin/projects?_=${timestamp}`, {
+      const response = await fetch(`${API_URL}/api/admin/projects?_=${timestamp}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Cache-Control': 'no-cache, no-store, must-revalidate',
@@ -176,7 +177,7 @@ const AdminProjects = ({ onStatsUpdate }) => {
       });
 
       const data = await response.json();
-      
+
       // Log completo per debug
       console.log('RISPOSTA API PROGETTI:', data);
       if (data.projects && data.projects.length > 0) {
@@ -190,13 +191,13 @@ const AdminProjects = ({ onStatsUpdate }) => {
           ...project,
           projectType: project.projectType || 'Singola' // Fallback a 'Singola' se undefined
         }));
-        
-        console.log('PROGETTI PROCESSATI:', projectsWithType.map(p => ({ 
-          id: p._id, 
-          title: p.title, 
-          projectType: p.projectType 
+
+        console.log('PROGETTI PROCESSATI:', projectsWithType.map(p => ({
+          id: p._id,
+          title: p.title,
+          projectType: p.projectType
         })));
-        
+
         setProjects(projectsWithType);
       } else {
         setError(data.message || 'Errore nel caricamento dei progetti');
@@ -214,7 +215,7 @@ const AdminProjects = ({ onStatsUpdate }) => {
     try {
       console.log("Caricamento clienti in corso...");
       const token = localStorage.getItem('token');
-      const response = await fetch('https://csv-backend-yg2x.onrender.com/api/admin/clients', {
+      const response = await fetch(`${API_URL}/api/admin/clients`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -229,9 +230,9 @@ const AdminProjects = ({ onStatsUpdate }) => {
           ...(data.externalClients || [])
         ];
 
-       
+
         setClients(allClients.filter(client => client.role !== 'admin'));
-       
+
       } else {
         console.error("Errore nel caricamento clienti:", data.message);
       }
@@ -241,6 +242,7 @@ const AdminProjects = ({ onStatsUpdate }) => {
   };
 
   // Funzione per resettare il form
+  // Modifica la funzione resetForm così:
   const resetForm = () => {
     setFormData({
       title: '',
@@ -260,6 +262,12 @@ const AdminProjects = ({ onStatsUpdate }) => {
     setSelectedImages([]);
     setUploadedImages([]);
     setImagesToDelete([]);
+
+    // Reset del file input
+    const fileInputs = document.querySelectorAll('input[type="file"]');
+    fileInputs.forEach(input => {
+      input.value = '';
+    });
   };
 
   // Gestisce l'invio del form per aggiungere/modificare un progetto
@@ -268,98 +276,182 @@ const AdminProjects = ({ onStatsUpdate }) => {
     setLoading(true);
     setError('');
     setSuccess('');
-    
+
     try {
       const token = localStorage.getItem('token');
       const isEditing = !!currentProject;
       const method = isEditing ? 'PUT' : 'POST';
-      const url = isEditing 
-        ? `https://csv-backend-yg2x.onrender.com/api/admin/projects/${currentProject._id}`
-        : 'https://csv-backend-yg2x.onrender.com/api/admin/projects';
-      
-      // Crea FormData per l'invio dei dati e file
+      const url = isEditing
+        ? `${API_URL}/api/admin/projects/${currentProject._id}`
+        : `${API_URL}/api/admin/projects`;
+
+      // IMPORTANTE: Prepariamo i dati del progetto
+      // Crea una copia di formData per evitare di modificare lo stato
+      const projectData = {
+        ...formData,
+        apartments: []
+      };
+
+      // Prepariamo il FormData da inviare
       const formDataToSend = new FormData();
-      
-      // Aggiungi tutti i campi di testo
+
+      // Aggiungiamo tutte le proprietà del progetto, tranne apartments che gestiremo separatamente
       Object.keys(formData).forEach(key => {
-        if (key === 'apartments') {
-          // Gli appartamenti vengono gestiti separatamente
-          return;
-        }
-        
+        if (key === 'apartments' || key === 'projectType') return;
         if (formData[key] !== undefined && formData[key] !== null) {
           formDataToSend.append(key, formData[key]);
         }
       });
-      
-      // Assicuriamoci che projectType sia sempre incluso esplicitamente
-      formDataToSend.append('projectType', formData.projectType || 'Singola');
-      
-      // Aggiungi tutte le immagini selezionate
-      if (selectedImages.length > 0) {
+
+      // Fix per projectType
+      formDataToSend.append('projectType', typeof formData.projectType === 'string' ? formData.projectType : 'Singola');
+
+      // Aggiungi le immagini del progetto
+      if (selectedImages && selectedImages.length > 0) {
         selectedImages.forEach(image => {
           formDataToSend.append('images', image);
         });
       }
-      
-      // Gestione degli appartamenti e delle loro immagini
+
+      // Aggiungi le descrizioni delle immagini
+      if (uploadedImages && uploadedImages.length > 0) {
+        const imageDescs = uploadedImages.filter(img => img.description).map(img => ({
+          filename: img.name,
+          description: img.description
+        }));
+
+        if (imageDescs.length > 0) {
+          formDataToSend.append('imageDescriptions', JSON.stringify(imageDescs));
+        }
+      }
+
+      // Gestione degli appartamenti
       if (formData.projectType === 'Multiproprietà' && formData.apartments && formData.apartments.length > 0) {
-        console.log('Preparazione appartamenti:', formData.apartments);
+        // Fix: Correggiamo gli stati degli appartamenti
+        const validStatuses = ['In corso', 'Completato', 'In pausa', 'Pianificato'];
         
-        // Converti l'array di appartamenti in JSON e aggiungi al FormData
-        formDataToSend.append('apartments', JSON.stringify(formData.apartments));
+        // Prepariamo i dati degli appartamenti senza le immagini per JSON
+        const apartmentsJSON = formData.apartments.map((apt, index) => {
+          // Prendiamo solo i dati dell'appartamento (NO newImages, NO immagini binarie)
+          const aptData = { ...apt };
+          
+          // Correggiamo lo status se necessario
+          aptData.status = validStatuses.includes(apt.status) ? apt.status : 'In corso';
+          
+          // Rimuoviamo i campi che non devono essere inviati come JSON
+          delete aptData.newImages;
+          
+          // Se ci sono immagini esistenti (già sul server), le manteniamo
+          if (aptData.images && Array.isArray(aptData.images)) {
+            // Conserviamo solo l'id delle immagini esistenti
+            aptData.images = aptData.images.map(img => 
+              typeof img === 'object' && img._id ? { _id: img._id } : img
+            );
+          } else {
+            aptData.images = [];
+          }
+          
+          return aptData;
+        });
         
-        // Aggiungi le immagini di ciascun appartamento
-        formData.apartments.forEach((apartment, index) => {
-          if (apartment.newImages && apartment.newImages.length > 0) {
-            apartment.newImages.forEach((image, imgIndex) => {
-              console.log(`Aggiunta immagine per appartamento ${index}:`, image.name);
-              formDataToSend.append(`apartment_${index}_image`, image);
+        // Aggiungiamo i dati JSON degli appartamenti (senza immagini binarie)
+        formDataToSend.append('apartmentData', JSON.stringify(apartmentsJSON));
+        
+        // Aggiungiamo le immagini degli appartamenti come file binari separati
+        let apartmentImageIndex = 0;
+        formData.apartments.forEach((apt, aptIndex) => {
+          // Se ci sono immagini nuove per questo appartamento
+          if (apt.newImages && apt.newImages.length > 0) {
+            apt.newImages.forEach((img, imgIndex) => {
+              if (img.file instanceof File) {
+                // Aggiungiamo il file binario al FormData con un nome che indica l'appartamento
+                formDataToSend.append(
+                  `apartmentImages`, 
+                  img.file, 
+                  `apt_${aptIndex}_img_${imgIndex}_${img.file.name}`
+                );
+                
+                // Aggiungiamo anche i metadata dell'immagine
+                const metadata = {
+                  apartmentIndex: aptIndex,
+                  filename: img.file.name,
+                  description: img.description || '',
+                  originalIndex: imgIndex
+                };
+                
+                formDataToSend.append(
+                  `apartmentImageMetadata_${apartmentImageIndex}`, 
+                  JSON.stringify(metadata)
+                );
+                
+                apartmentImageIndex++;
+              }
             });
           }
         });
+        
+        // Aggiungiamo il numero totale di immagini degli appartamenti
+        formDataToSend.append('apartmentImagesCount', apartmentImageIndex);
       }
-      
+
       // Aggiungi gli ID delle immagini da eliminare
       if (imagesToDelete.length > 0) {
         formDataToSend.append('imagesToDelete', JSON.stringify(imagesToDelete));
       }
-      
+
       console.log('Invio dati al server:', {
         method,
         url,
         apartments: formData.apartments,
         projectType: formData.projectType
       });
-      
-      const response = await fetch(url, {
-        method,
-        headers: {
-          'Authorization': `Bearer ${token}`
-        },
-        body: formDataToSend,
-      });
-      
-      const data = await response.json();
-      
-      if (data.success) {
-        setSuccess(showAddModal ? 'Progetto aggiunto con successo!' : 'Progetto aggiornato con successo!');
-        fetchProjects();
-        if (onStatsUpdate) onStatsUpdate();
-        
-        // Se siamo in modalità aggiunta, resettiamo il form
-        if (showAddModal) {
-          resetForm();
+
+      try {
+        const response = await fetch(url, {
+          method,
+          headers: {
+            'Authorization': `Bearer ${token}`
+          },
+          body: formDataToSend,
+        });
+
+        // Gestione degli errori HTTP
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error('Errore server:', response.status, errorText);
+          throw new Error(`Errore dal server: ${response.status} ${errorText || response.statusText}`);
         }
-        
-        setTimeout(() => {
-          setSuccess('');
-          if (showEditModal) {
-            setShowEditModal(false);
+
+        const data = await response.json();
+
+        if (data.success) {
+          setSuccess(showAddModal ? 'Progetto aggiunto con successo!' : 'Progetto aggiornato con successo!');
+          fetchProjects();
+          if (onStatsUpdate) onStatsUpdate();
+
+          // Se siamo in modalità aggiunta, resettiamo il form
+          if (showAddModal) {
+            resetForm();
+            setShowAddModal(false); // Chiudi il modal dopo il salvataggio
+            setSelectedImages([]);
+            setUploadedImages([]);
+            setImagesToDelete([]);
           }
-        }, 2000);
-      } else {
-        setError(data.message || 'Errore durante il salvataggio');
+
+          setTimeout(() => {
+            setSuccess('');
+            if (showEditModal) {
+              setShowEditModal(false);
+            }
+          }, 2000);
+        } else {
+          setError(data.message || 'Errore durante il salvataggio');
+        }
+      } catch (error) {
+        console.error('Errore durante il salvataggio:', error);
+        setError('Errore di connessione. Riprova più tardi.');
+      } finally {
+        setLoading(false);
       }
     } catch (error) {
       console.error('Errore durante il salvataggio:', error);
@@ -369,13 +461,23 @@ const AdminProjects = ({ onStatsUpdate }) => {
     }
   };
 
+  // Funzione per leggere un file come base64
+  const readFileAsBase64 = async (file) => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  };
+
   // Gestisce il click sul pulsante modifica
   const handleEditClick = (project) => {
     setActiveTab('info'); // Resettiamo il tab attivo
     setCurrentProject(project);
-    
+
     console.log('Editing project:', project);
-    
+
     // Prepara i dati del progetto per il form
     const projectData = {
       _id: project._id,
@@ -393,9 +495,9 @@ const AdminProjects = ({ onStatsUpdate }) => {
       notes: project.notes || '',
       apartments: project.apartments || []
     };
-    
+
     console.log('Form data prepared:', projectData);
-    
+
     setFormData(projectData);
     setUploadedImages(project.images || []);
     setImagesToDelete([]);
@@ -429,7 +531,7 @@ const AdminProjects = ({ onStatsUpdate }) => {
   const handleDeleteExistingImage = (imageId) => {
     // Segna l'immagine per la rimozione
     setImagesToDelete([...imagesToDelete, imageId]);
-    
+
     // Aggiorna l'anteprima rimuovendo l'immagine
     if (currentProject && currentProject.images) {
       const updatedImages = currentProject.images.filter(img => img._id !== imageId);
@@ -461,6 +563,15 @@ const AdminProjects = ({ onStatsUpdate }) => {
   // Gestisce il click sul pulsante aggiungi
   const handleAddClick = () => {
     resetForm();
+
+    // Assicurati che tutti gli input file vengano resettati
+    setTimeout(() => {
+      const fileInputs = document.querySelectorAll('input[type="file"]');
+      fileInputs.forEach(input => {
+        input.value = '';
+      });
+    }, 0);
+
     setShowAddModal(true);
   };
 
@@ -477,7 +588,7 @@ const AdminProjects = ({ onStatsUpdate }) => {
       console.log('Elimino progetto con ID:', currentProject._id);
 
       // Usiamo esplicitamente l'endpoint corretto che corrisponde alla route in projects.js
-      const url = `https://csv-backend-yg2x.onrender.com/api/projects/admin/${currentProject._id}`;
+      const url = `${API_URL}/api/projects/admin/${currentProject._id}`;
 
       const response = await fetch(url, {
         method: 'DELETE',
@@ -504,12 +615,12 @@ const AdminProjects = ({ onStatsUpdate }) => {
       setLoading(false);
     }
   };
-  
+
 
   // Form Aggiungi/Modifica Progetto
   const projectForm = (
-    <Modal 
-      show={showAddModal || showEditModal} 
+    <Modal
+      show={showAddModal || showEditModal}
       onHide={() => {
         setShowAddModal(false);
         setShowEditModal(false);
@@ -527,20 +638,20 @@ const AdminProjects = ({ onStatsUpdate }) => {
       <Modal.Body>
         {error && <Alert variant="danger">{error}</Alert>}
         {success && <Alert variant="success">{success}</Alert>}
-        
+
         <Form onSubmit={handleSubmit}>
           <Nav variant="tabs" className="mb-3">
             <Nav.Item>
-              <Nav.Link 
-                active={activeTab === 'info'} 
+              <Nav.Link
+                active={activeTab === 'info'}
                 onClick={() => setActiveTab('info')}
               >
                 Informazioni Base
               </Nav.Link>
             </Nav.Item>
             <Nav.Item>
-              <Nav.Link 
-                active={activeTab === 'images'} 
+              <Nav.Link
+                active={activeTab === 'images'}
                 onClick={() => setActiveTab('images')}
               >
                 Immagini
@@ -548,8 +659,8 @@ const AdminProjects = ({ onStatsUpdate }) => {
             </Nav.Item>
             {formData.projectType === 'Multiproprietà' && (
               <Nav.Item>
-                <Nav.Link 
-                  active={activeTab === 'apartments'} 
+                <Nav.Link
+                  active={activeTab === 'apartments'}
                   onClick={() => setActiveTab('apartments')}
                 >
                   Appartamenti {formData.apartments?.length > 0 && `(${formData.apartments.length})`}
@@ -592,7 +703,24 @@ const AdminProjects = ({ onStatsUpdate }) => {
                   </Form.Group>
                 </Col>
               </Row>
-              
+
+              {/* Campo descrizione aggiunto qui */}
+              <Row>
+                <Col md={12}>
+                  <Form.Group className="mb-3">
+                    <Form.Label>Descrizione</Form.Label>
+                    <Form.Control
+                      as="textarea"
+                      rows={3}
+                      name="description"
+                      value={formData.description || ''}
+                      onChange={handleChange}
+                      placeholder="Inserisci una descrizione del progetto"
+                    />
+                  </Form.Group>
+                </Col>
+              </Row>
+
               <Row>
                 <Col md={6}>
                   <Form.Group className="mb-3">
@@ -624,7 +752,7 @@ const AdminProjects = ({ onStatsUpdate }) => {
                   </Form.Group>
                 </Col>
               </Row>
-              
+
               <Row>
                 <Col md={6}>
                   <Form.Group className="mb-3">
@@ -672,7 +800,7 @@ const AdminProjects = ({ onStatsUpdate }) => {
                   Seleziona una o più immagini per il progetto
                 </Form.Text>
               </Form.Group>
-              
+
               {/* Immagini selezionate (nuove) */}
               {selectedImages.length > 0 && (
                 <div className="mt-4">
@@ -681,26 +809,45 @@ const AdminProjects = ({ onStatsUpdate }) => {
                     {selectedImages.map((image, index) => (
                       <Col key={index} xs={6} md={4} lg={3} className="mb-3">
                         <div className="image-preview-container">
-                          <img 
-                            src={URL.createObjectURL(image)} 
+                          <img
+                            src={URL.createObjectURL(image)}
                             alt={`Anteprima ${index + 1}`}
                             className="img-thumbnail"
                           />
-                          <Button 
-                            variant="danger" 
-                            size="sm" 
+                          <Button
+                            variant="danger"
+                            size="sm"
                             className="remove-image-btn"
                             onClick={() => handleRemoveImage(index)}
                           >
                             <FontAwesomeIcon icon={faTrash} />
                           </Button>
                         </div>
+                        {/* Aggiungi campo descrizione per ogni immagine */}
+                        <Form.Group className="mt-1">
+                          <Form.Control
+                            type="text"
+                            placeholder="Descrizione foto"
+                            size="sm"
+                            value={image.description || ''}
+                            onChange={(e) => {
+                              const newSelectedImages = [...selectedImages];
+                              newSelectedImages[index] = Object.assign(
+                                new File([selectedImages[index]], selectedImages[index].name, {
+                                  type: selectedImages[index].type
+                                }),
+                                { description: e.target.value }
+                              );
+                              setSelectedImages(newSelectedImages);
+                            }}
+                          />
+                        </Form.Group>
                       </Col>
                     ))}
                   </Row>
                 </div>
               )}
-              
+
               {/* Immagini esistenti (per la modifica) */}
               {currentProject && currentProject.images && currentProject.images.length > 0 && (
                 <div className="mt-4">
@@ -709,14 +856,14 @@ const AdminProjects = ({ onStatsUpdate }) => {
                     {currentProject.images.map((image, index) => (
                       <Col key={index} xs={6} md={4} lg={3} className="mb-3">
                         <div className="image-preview-container">
-                          <img 
-                            src={`https://csv-backend-yg2x.onrender.com${image.url}`} 
+                          <img
+                            src={`${API_URL}${image.url}`}
                             alt={`Immagine ${index + 1}`}
                             className="img-thumbnail"
                           />
-                          <Button 
-                            variant="danger" 
-                            size="sm" 
+                          <Button
+                            variant="danger"
+                            size="sm"
                             className="remove-image-btn"
                             onClick={() => handleDeleteExistingImage(image._id)}
                           >
@@ -732,7 +879,7 @@ const AdminProjects = ({ onStatsUpdate }) => {
           )}
 
           {activeTab === 'apartments' && formData.projectType === 'Multiproprietà' && (
-            <ApartmentManager 
+            <ApartmentManager
               apartments={formData.apartments}
               onChange={(updatedApartments) => {
                 setFormData({
@@ -742,48 +889,48 @@ const AdminProjects = ({ onStatsUpdate }) => {
               }}
             />
           )}
-            
-            <div className="d-flex justify-content-end mt-4">
-              <Button 
-                variant="secondary" 
-                className="me-2"
-                onClick={() => {
-                  setShowAddModal(false);
-                  setShowEditModal(false);
-                  resetForm();
-                }}
-              >
-                <FontAwesomeIcon icon={faTimes} className="me-2" />
-                Annulla
-              </Button>
-              <Button 
-                variant="primary"
-                type="submit"
-                disabled={loading}
-              >
-                {loading ? (
-                  <>
-                    <Spinner
-                      as="span"
-                      animation="border"
-                      size="sm"
-                      role="status"
-                      aria-hidden="true"
-                      className="me-2"
-                    />
-                    Salvataggio...
-                  </>
-                ) : (
-                  <>
-                    <FontAwesomeIcon icon={faCheck} className="me-2" />
-                    Salva
-                  </>
-                )}
-              </Button>
-            </div>
-          </Form>
-        </Modal.Body>
-      </Modal>
+
+          <div className="d-flex justify-content-end mt-4">
+            <Button
+              variant="secondary"
+              className="me-2"
+              onClick={() => {
+                setShowAddModal(false);
+                setShowEditModal(false);
+                resetForm();
+              }}
+            >
+              <FontAwesomeIcon icon={faTimes} className="me-2" />
+              Annulla
+            </Button>
+            <Button
+              variant="primary"
+              type="submit"
+              disabled={loading}
+            >
+              {loading ? (
+                <>
+                  <Spinner
+                    as="span"
+                    animation="border"
+                    size="sm"
+                    role="status"
+                    aria-hidden="true"
+                    className="me-2"
+                  />
+                  Salvataggio...
+                </>
+              ) : (
+                <>
+                  <FontAwesomeIcon icon={faCheck} className="me-2" />
+                  Salva
+                </>
+              )}
+            </Button>
+          </div>
+        </Form>
+      </Modal.Body>
+    </Modal>
   );
 
   // Tabella dei progetti
@@ -842,10 +989,10 @@ const AdminProjects = ({ onStatsUpdate }) => {
               </td>
               <td>
                 <Badge bg={
-                  project.status === 'Completato' ? 'success' : 
-                  project.status === 'In corso' ? 'primary' : 
-                  project.status === 'In attesa' ? 'warning' : 
-                  'danger'
+                  project.status === 'Completato' ? 'success' :
+                    project.status === 'In corso' ? 'primary' :
+                      project.status === 'In attesa' ? 'warning' :
+                        'danger'
                 }>
                   {project.status}
                 </Badge>
@@ -854,8 +1001,8 @@ const AdminProjects = ({ onStatsUpdate }) => {
               <td>{formatDate(project.startDate)}</td>
               <td>{formatDate(project.endDate)}</td>
               <td>
-                <Button 
-                  variant="outline-primary" 
+                <Button
+                  variant="outline-primary"
                   size="sm"
                   className="me-1 mb-1"
                   onClick={() => handleViewClick(project)}
@@ -863,8 +1010,8 @@ const AdminProjects = ({ onStatsUpdate }) => {
                 >
                   <FontAwesomeIcon icon={faEye} />
                 </Button>
-                <Button 
-                  variant="outline-success" 
+                <Button
+                  variant="outline-success"
                   size="sm"
                   className="me-1 mb-1"
                   onClick={() => handleEditClick(project)}
@@ -872,8 +1019,8 @@ const AdminProjects = ({ onStatsUpdate }) => {
                 >
                   <FontAwesomeIcon icon={faEdit} />
                 </Button>
-                <Button 
-                  variant="outline-danger" 
+                <Button
+                  variant="outline-danger"
                   size="sm"
                   className="me-1 mb-1"
                   onClick={() => handleDeleteClick(project)}
@@ -891,8 +1038,8 @@ const AdminProjects = ({ onStatsUpdate }) => {
 
   // Modal di visualizzazione dettagli progetto
   const projectViewModal = (
-    <Modal 
-      show={showViewModal} 
+    <Modal
+      show={showViewModal}
       onHide={() => setShowViewModal(false)}
       size="lg"
     >
@@ -917,12 +1064,12 @@ const AdminProjects = ({ onStatsUpdate }) => {
                   ) : (
                     <Badge bg="secondary" className="me-2">Singola</Badge>
                   )}
-                  <Badge 
+                  <Badge
                     bg={
-                      currentProject.status === 'Completato' ? 'success' : 
-                      currentProject.status === 'In corso' ? 'primary' : 
-                      currentProject.status === 'In attesa' ? 'warning' : 
-                      'danger'
+                      currentProject.status === 'Completato' ? 'success' :
+                        currentProject.status === 'In corso' ? 'primary' :
+                          currentProject.status === 'In attesa' ? 'warning' :
+                            'danger'
                     }
                   >
                     {currentProject.status}
@@ -941,7 +1088,7 @@ const AdminProjects = ({ onStatsUpdate }) => {
                 </p>
               </Col>
             </Row>
-            
+
             {/* Tabs per navigare tra le diverse sezioni */}
             <Tabs defaultActiveKey="info" className="mb-4">
               <Tab eventKey="info" title="Informazioni">
@@ -951,7 +1098,7 @@ const AdminProjects = ({ onStatsUpdate }) => {
                     <p>{currentProject.description || 'Nessuna descrizione disponibile.'}</p>
                   </Col>
                 </Row>
-                
+
                 <Row className="mt-3">
                   <Col md={6}>
                     <h5>Cliente</h5>
@@ -962,7 +1109,7 @@ const AdminProjects = ({ onStatsUpdate }) => {
                     <p>{currentProject.category || 'N/D'}</p>
                   </Col>
                 </Row>
-                
+
                 {currentProject.location && (
                   <Row className="mt-3">
                     <Col md={12}>
@@ -971,7 +1118,7 @@ const AdminProjects = ({ onStatsUpdate }) => {
                     </Col>
                   </Row>
                 )}
-                
+
                 {currentProject.notes && (
                   <Row className="mt-3">
                     <Col md={12}>
@@ -981,17 +1128,17 @@ const AdminProjects = ({ onStatsUpdate }) => {
                   </Row>
                 )}
               </Tab>
-              
+
               <Tab eventKey="images" title="Immagini">
                 {currentProject.images && currentProject.images.length > 0 ? (
                   <Row className="mt-3">
                     {currentProject.images.map((image, index) => (
                       <Col key={index} xs={6} md={3} className="mb-3">
                         <Card>
-                          <Card.Img 
-                            variant="top" 
-                            src={`https://csv-backend-yg2x.onrender.com${image.url}`} 
-                            alt={`Immagine ${index + 1}`} 
+                          <Card.Img
+                            variant="top"
+                            src={`${API_URL}${image.url}`}
+                            alt={`Immagine ${index + 1}`}
                           />
                         </Card>
                       </Col>
@@ -1003,7 +1150,7 @@ const AdminProjects = ({ onStatsUpdate }) => {
                   </Alert>
                 )}
               </Tab>
-              
+
               {currentProject.projectType === 'Multiproprietà' && (
                 <Tab eventKey="apartments" title={`Appartamenti (${currentProject.apartments?.length || 0})`}>
                   {currentProject.apartments && currentProject.apartments.length > 0 ? (
@@ -1013,7 +1160,7 @@ const AdminProjects = ({ onStatsUpdate }) => {
                           <h5 className="mb-0">
                             <FontAwesomeIcon icon={faBuilding} className="me-2" />
                             {apt.title || `Appartamento ${index + 1}`}
-                            <Badge 
+                            <Badge
                               bg={apt.status === 'Disponibile' ? 'success' : apt.status === 'Venduto' ? 'danger' : 'warning'}
                               className="ms-2"
                             >
@@ -1048,14 +1195,14 @@ const AdminProjects = ({ onStatsUpdate }) => {
                               </p>
                             </Col>
                           </Row>
-                          
+
                           {apt.description && (
                             <div className="mt-3">
                               <h6>Descrizione</h6>
                               <p>{apt.description}</p>
                             </div>
                           )}
-                          
+
                           {apt.images && apt.images.length > 0 && (
                             <div className="mt-3">
                               <h6>Immagini</h6>
@@ -1063,9 +1210,9 @@ const AdminProjects = ({ onStatsUpdate }) => {
                                 {apt.images.map((img, imgIndex) => (
                                   <Col key={imgIndex} xs={6} md={3} className="mb-3">
                                     <Card>
-                                      <Card.Img 
-                                        variant="top" 
-                                        src={`https://csv-backend-yg2x.onrender.com${img.url}`} 
+                                      <Card.Img
+                                        variant="top"
+                                        src={`${API_URL}${img.url}`}
                                         alt={`Immagine ${imgIndex + 1}`}
                                       />
                                     </Card>
@@ -1089,8 +1236,8 @@ const AdminProjects = ({ onStatsUpdate }) => {
         )}
       </Modal.Body>
       <Modal.Footer>
-        <Button 
-          variant="primary" 
+        <Button
+          variant="primary"
           onClick={() => setShowViewModal(false)}
         >
           Chiudi
@@ -1194,8 +1341,8 @@ const AdminProjects = ({ onStatsUpdate }) => {
       {projectViewModal}
 
       {/* Modale di conferma eliminazione */}
-      <Modal 
-        show={showDeleteModal} 
+      <Modal
+        show={showDeleteModal}
         onHide={() => setShowDeleteModal(false)}
         centered
       >
@@ -1205,7 +1352,7 @@ const AdminProjects = ({ onStatsUpdate }) => {
         <Modal.Body>
           {error && <Alert variant="danger">{error}</Alert>}
           {success && <Alert variant="success">{success}</Alert>}
-          
+
           <p>Sei sicuro di voler eliminare il progetto <strong>{currentProject?.title}</strong>?</p>
           <p className="text-danger">Questa azione non può essere annullata.</p>
         </Modal.Body>
@@ -1213,8 +1360,8 @@ const AdminProjects = ({ onStatsUpdate }) => {
           <Button variant="secondary" onClick={() => setShowDeleteModal(false)}>
             Annulla
           </Button>
-          <Button 
-            variant="danger" 
+          <Button
+            variant="danger"
             onClick={handleDeleteProject}
             disabled={loading}
           >

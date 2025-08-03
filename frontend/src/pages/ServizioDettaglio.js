@@ -5,9 +5,10 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPhone, faExclamationTriangle } from '@fortawesome/free-solid-svg-icons';
 import PageHeader from '../components/common/PageHeader';
 import './ServizioDettaglio.css';
+import { API_URL } from '../config';
 
 // API base URL
-const API_URL = 'https://csv-backend-yg2x.onrender.com';
+
 
 const ServizioDettaglio = () => {
   const { tipo } = useParams();
@@ -165,8 +166,12 @@ const ServizioDettaglio = () => {
     }
   };
 
+  
   const servizio = serviziDatabase[tipo];
   
+  useEffect(()=> {
+    console.log(projects,'project')
+  },[projects])
   if (!servizio) {
     return (
       <Container className="my-5 text-center">

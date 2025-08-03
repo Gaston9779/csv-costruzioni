@@ -5,6 +5,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faBuilding, faHome, faCity, faWarehouse, faExclamationTriangle } from '@fortawesome/free-solid-svg-icons';
 import PageHeader from '../components/common/PageHeader';
 import './Servizi.css';
+import { API_URL } from '../config';
 
 const Servizi = () => {
   // Stato per i progetti
@@ -16,7 +17,7 @@ const Servizi = () => {
   useEffect(() => {
     const fetchProjects = async () => {
       try {
-        const response = await fetch('https://csv-backend-yg2x.onrender.com/api/projects/public');
+        const response = await fetch(`${API_URL}/api/projects/public`);
         const data = await response.json();
         
         if (data.success) {

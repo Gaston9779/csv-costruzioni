@@ -13,6 +13,7 @@ import {
   faTimes,
   faProjectDiagram
 } from '@fortawesome/free-solid-svg-icons';
+import { API_URL } from '../../config';
 
 const AdminClients = ({ onStatsUpdate }) => {
 
@@ -75,7 +76,7 @@ const AdminClients = ({ onStatsUpdate }) => {
 
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('https://csv-backend-yg2x.onrender.com/api/admin/clients', {
+      const response = await fetch(`${API_URL}/api/admin/clients`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -122,8 +123,8 @@ const AdminClients = ({ onStatsUpdate }) => {
     try {
       const token = localStorage.getItem('token');
       const url = isEditing
-        ? `https://csv-backend-yg2x.onrender.com/api/admin/clients/${currentClient._id}`
-        : 'https://csv-backend-yg2x.onrender.com/api/admin/clients';
+        ? `${API_URL}/api/admin/clients/${currentClient._id}`
+        : `${API_URL}/api/admin/clients`;
 
       const method = isEditing ? 'PUT' : 'POST';
       console.log("Richiesta API:", method, url);
@@ -183,7 +184,7 @@ const AdminClients = ({ onStatsUpdate }) => {
 
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`https://csv-backend-yg2x.onrender.com/api/admin/clients/${currentClient._id}`, {
+      const response = await fetch(`${API_URL}/api/admin/clients/${currentClient._id}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`

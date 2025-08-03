@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Card, Button, Nav, Tab, ProgressBar, Spinner } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { API_URL } from '../../config'; // o il relativo path
 import {
   faUsers,
   faProjectDiagram,
@@ -66,27 +67,27 @@ const AdminDashboard = ({ user, onLogout }) => {
     try {
       const token = localStorage.getItem('token');
 
-      const clientsResponse = await fetch('https://csv-backend-yg2x.onrender.com/api/admin/clients/stats', {
+      const clientsResponse = await fetch(`${API_URL}/api/admin/clients/stats`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
       });
 
-      const projectsResponse = await fetch('https://csv-backend-yg2x.onrender.com/api/admin/projects/stats', {
+      const projectsResponse = await fetch(`${API_URL}/api/admin/projects/stats`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
       });
 
       // Recupera i progetti più recenti per le attività
-      const recentProjectsResponse = await fetch('https://csv-backend-yg2x.onrender.com/api/admin/projects?limit=5&sort=updatedAt', {
+      const recentProjectsResponse = await fetch(`${API_URL}/api/admin/projects?limit=5&sort=updatedAt`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
       });
 
       // Recupera i documenti più recenti e le statistiche sui documenti
-      const documentsResponse = await fetch('https://csv-backend-yg2x.onrender.com/api/admin/documents', {
+      const documentsResponse = await fetch(`${API_URL}/api/admin/documents`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
