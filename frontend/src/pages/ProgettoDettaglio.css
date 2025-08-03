@@ -363,7 +363,7 @@
 }
 
 .project-card .card-footer {
-  background-color: transparent;
+  background-color: white!important;
   border-top: none;
   padding-top: 0;
 }

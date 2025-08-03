@@ -262,6 +262,8 @@ const AdminProjects = ({ onStatsUpdate }) => {
     setSelectedImages([]);
     setUploadedImages([]);
     setImagesToDelete([]);
+    setCurrentProject(null);
+    setActiveTab('info');
 
     // Reset del file input
     const fileInputs = document.querySelectorAll('input[type="file"]');
@@ -562,7 +564,12 @@ const AdminProjects = ({ onStatsUpdate }) => {
 
   // Gestisce il click sul pulsante aggiungi
   const handleAddClick = () => {
+    // Reset completo dello stato
+    setCurrentProject(null);
+    setActiveTab('info');
     resetForm();
+    setError('');
+    setSuccess('');
 
     // Assicurati che tutti gli input file vengano resettati
     setTimeout(() => {

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Card, Button, Spinner } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faMapMarkerAlt, faCalendarAlt, faExclamationTriangle } from '@fortawesome/free-solid-svg-icons';
+import { faMapMarkerAlt, faCalendarAlt, faExclamationTriangle, faEye, faCamera, faArrowRight, faBuilding, faBed, faBath, faRulerCombined } from '@fortawesome/free-solid-svg-icons';
 import PageHeader from '../components/common/PageHeader';
 import './Progetti.css';
 import { API_URL } from '../config';
@@ -182,65 +182,160 @@ const Progetti = () => {
             <Row>
               {progettiFiltered.map((project) => (
                 <Col lg={4} md={6} key={project._id} className="mb-4">
-                  <Card className="project-card h-100">
-                    <div className="project-image">
-                      <Card.Img 
-                        variant="top" 
-                        src={getProjectImageUrl(project)} 
-                        alt={project.title} 
-                        onError={handleImageError}
-                      />
-                      <div className="project-overlay">
-                        <Link to={`/progetti/${project._id}`} className="btn btn-light">
-                          Vedi Dettagli
-                        </Link>
-                      </div>
-                      <div className="project-category">{project.category || 'Altro'}</div>
-                    </div>
-                    <Card.Body>
-                      <Card.Title>{project.title}</Card.Title>
-                      
-                      {/* Tutte le informazioni in un'unica sezione */}
-                      <div className="project-info-unified mb-3">
-                        {project.description && (
-                          <Card.Text className="mb-2">
-                            {project.description && project.description.length > 100 
-                              ? project.description.substring(0, 100) + '...' 
-                              : project.description}
-                          </Card.Text>
-                        )}
+                  <Card className="hotel-style-project-card h-100 border-0">
+                    {/* Image Section with Enhanced Design */}
+                    <div className="project-image-wrapper position-relative">
+                      <div className="project-image-frame">
+                        <Card.Img 
+                          variant="top" 
+                          src={getProjectImageUrl(project)} 
+                          alt={project.title} 
+                          onError={handleImageError}
+                          className="project-hero-image"
+                        />
                         
-                        {/* Nuovo campo descrizione (foto) */}
-                        {project.images && project.images.length > 0 && project.images[0].description && (
-                          <div className="image-description mb-2">
-                            <strong>Descrizione foto:</strong> {project.images[0].description}
+                        {/* Dynamic Gradient Overlay */}
+                        <div className="project-dynamic-overlay"></div>
+                        
+                        {/* Floating Category Badge */}
+                        <div className="floating-category-badge">
+                          <div className="category-pill">
+                            <FontAwesomeIcon icon={faBuilding} className="category-icon" />
+                            <span className="category-text">{project.category || 'Altro'}</span>
+                          </div>
+                        </div>
+                        
+                        {/* Project Type Badge */}
+                        {project.projectType && (
+                          <div className="floating-type-badge">
+                            <div className="type-pill multipropriety">
+                              <span>{project.projectType}</span>
+                            </div>
                           </div>
                         )}
                         
-                        <div className="project-meta mt-2">
-                          {project.location && (
-                            <div className="meta-item">
-                              <FontAwesomeIcon icon={faMapMarkerAlt} className="me-1" />
-                              <span>{project.location}</span>
+                        {/* Premium Hover Overlay */}
+                        <div className="premium-hover-overlay">
+                          <div className="hover-content">
+                            <div className="hover-icon-wrapper">
+                              <FontAwesomeIcon icon={faEye} className="hover-icon" />
                             </div>
-                          )}
-                          {project.startDate && (
-                            <div className="meta-item">
-                              <FontAwesomeIcon icon={faCalendarAlt} className="me-1" />
-                              <span>{new Date(project.startDate).getFullYear()}</span>
-                            </div>
-                          )}
-                          {project.projectType && (
-                            <div className="meta-item">
-                              <span className="badge bg-info me-1">{project.projectType}</span>
-                            </div>
-                          )}
+                            <h6 className="hover-title">Visualizza Progetto</h6>
+                            <p className="hover-subtitle">Scopri tutti i dettagli</p>
+                          </div>
                         </div>
                       </div>
+                    </div>
+                    
+                    {/* Content Section */}
+                    <Card.Body className="hotel-card-body">
+                      {/* Title and Location */}
+                      <div className="hotel-header">
+                        <h5 className="hotel-project-title">{project.title}</h5>
+                        {project.location && (
+                          <p className="hotel-location">
+                            <FontAwesomeIcon icon={faMapMarkerAlt} className="location-icon" />
+                            {project.location}
+                          </p>
+                        )}
+                      </div>
+                      
+                      {/* Price Section */}
+                      <div className="hotel-price-section">
+                        {project.projectType === 'Multiproprietà' ? (
+                          <div className="multipropriety-info">
+                            <div className="price-row">
+                              <span className="price-label">Valore Totale</span>
+                              <span className="price-value">
+                                {project.budget > 0 
+                                  ? `€${parseInt(project.budget).toLocaleString('it-IT')}` 
+                                  : 'Su richiesta'
+                                }
+                              </span>
+                            </div>
+                            <div className="apartments-count">
+                              <FontAwesomeIcon icon={faBuilding} className="apartments-icon" />
+                              <span>{project.apartments ? project.apartments.length : 0} appartamenti disponibili</span>
+                            </div>
+                          </div>
+                        ) : (
+                          // Progetto Singolo - Mostra specifiche appartamento
+                          project.apartments && project.apartments.length > 0 && (
+                            <div className="single-apartment-info">
+                              <div className="price-row">
+                                <span className="price-label">Prezzo</span>
+                                <span className="price-value">
+                                  {project.apartments[0].budget > 0 
+                                    ? `€${project.apartments[0].budget.toLocaleString('it-IT')}` 
+                                    : project.budget > 0 
+                                      ? `€${parseInt(project.budget).toLocaleString('it-IT')}`
+                                      : 'Su richiesta'
+                                  }
+                                </span>
+                              </div>
+                              
+                              {/* Apartment Specs */}
+                              <div className="apartment-specs">
+                                {project.apartments[0].squareMeters && (
+                                  <div className="spec-item">
+                                    <FontAwesomeIcon icon={faRulerCombined} className="spec-icon" />
+                                    <span>{project.apartments[0].squareMeters} m²</span>
+                                  </div>
+                                )}
+                                {project.apartments[0].bedrooms !== undefined && (
+                                  <div className="spec-item">
+                                    <FontAwesomeIcon icon={faBed} className="spec-icon" />
+                                    <span>{project.apartments[0].bedrooms} camere</span>
+                                  </div>
+                                )}
+                                {project.apartments[0].bathrooms !== undefined && (
+                                  <div className="spec-item">
+                                    <FontAwesomeIcon icon={faBath} className="spec-icon" />
+                                    <span>{project.apartments[0].bathrooms} bagni</span>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          )
+                        )}
+                      </div>
+                      
+                      {/* Description */}
+                      {project.description && (
+                        <p className="hotel-description">
+                          {project.description.length > 60 
+                            ? project.description.substring(0, 60) + '...' 
+                            : project.description}
+                        </p>
+                      )}
+                      
+                      {/* Meta Info Row */}
+                      <div className="hotel-meta-row">
+                        {project.startDate && (
+                          <div className="hotel-meta-item">
+                            <FontAwesomeIcon icon={faCalendarAlt} className="meta-icon" />
+                            <span className="meta-value">{new Date(project.startDate).getFullYear()}</span>
+                          </div>
+                        )}
+                        
+                        {project.images && project.images.length > 0 && (
+                          <div className="hotel-meta-item">
+                            <FontAwesomeIcon icon={faCamera} className="meta-icon" />
+                            <span className="meta-value">{project.images.length} foto</span>
+                            <p className="photo-desc-text">{project.images[0].description}</p>
+                          </div>
+                        )}
+                      </div>
                     </Card.Body>
-                    <Card.Footer>
-                      <Link to={`/progetti/${project._id}`} className="btn btn-primary w-100">
-                        Scopri di più
+                    
+                    {/* Action Footer */}
+                    <Card.Footer className="hotel-card-footer">
+                      <Link 
+                        to={`/progetti/${project._id}`} 
+                        className="hotel-view-button"
+                      >
+                        <span>Visualizza Progetto</span>
+                        <FontAwesomeIcon icon={faArrowRight} className="button-arrow" />
                       </Link>
                     </Card.Footer>
                   </Card>
