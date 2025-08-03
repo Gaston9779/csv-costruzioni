@@ -196,6 +196,15 @@
   font-size: 0.85rem;
 }
 
+/* Single Apartment Info - Same style as multipropriety */
+.single-apartment-info .apartments-count {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #495057;
+  font-size: 0.85rem;
+}
+
 .apartments-icon {
   color: #007bff;
   font-size: 0.8rem;

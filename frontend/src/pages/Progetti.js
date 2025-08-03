@@ -259,41 +259,34 @@ const Progetti = () => {
                             </div>
                           </div>
                         ) : (
-                          // Progetto Singolo - Mostra specifiche appartamento
-                          project.apartments && project.apartments.length > 0 && (
+                          // Progetto Singolo - Mostra prezzo progetto
+                          (
                             <div className="single-apartment-info">
                               <div className="price-row">
-                                <span className="price-label">Prezzo</span>
+                                <span className="price-label">Valore totale</span>
                                 <span className="price-value">
-                                  {project.apartments[0].budget > 0 
-                                    ? `€${project.apartments[0].budget.toLocaleString('it-IT')}` 
-                                    : project.budget > 0 
-                                      ? `€${parseInt(project.budget).toLocaleString('it-IT')}`
-                                      : 'Su richiesta'
-                                  }
+                                  {(() => {
+                                     if (!project) return 'Su richiesta';
+                                     
+                                     const apartment = project.apartments?.[0];
+                                     const apartmentBudget = apartment?.budget;
+                                     const projectBudget = project.budget;
+                                     
+                                     if (apartmentBudget && apartmentBudget > 0) {
+                                       return `€${parseInt(apartmentBudget).toLocaleString('it-IT')}`;
+                                     } else if (projectBudget && projectBudget > 0) {
+                                       return `€${parseInt(projectBudget).toLocaleString('it-IT')}`;
+                                     } else {
+                                       return 'Su richiesta';
+                                     }
+                                   })()
+                                   }
                                 </span>
                               </div>
                               
-                              {/* Apartment Specs */}
-                              <div className="apartment-specs">
-                                {project.apartments[0].squareMeters && (
-                                  <div className="spec-item">
-                                    <FontAwesomeIcon icon={faRulerCombined} className="spec-icon" />
-                                    <span>{project.apartments[0].squareMeters} m²</span>
-                                  </div>
-                                )}
-                                {project.apartments[0].bedrooms !== undefined && (
-                                  <div className="spec-item">
-                                    <FontAwesomeIcon icon={faBed} className="spec-icon" />
-                                    <span>{project.apartments[0].bedrooms} camere</span>
-                                  </div>
-                                )}
-                                {project.apartments[0].bathrooms !== undefined && (
-                                  <div className="spec-item">
-                                    <FontAwesomeIcon icon={faBath} className="spec-icon" />
-                                    <span>{project.apartments[0].bathrooms} bagni</span>
-                                  </div>
-                                )}
+                              <div className="apartments-count">
+                                <FontAwesomeIcon icon={faBuilding} className="apartments-icon" />
+                                <span>1 appartamento disponibile</span>
                               </div>
                             </div>
                           )
