@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { Navbar, Container, Nav, NavDropdown } from 'react-bootstrap';
 import { Link, NavLink, useLocation } from 'react-router-dom';
 import './Header.css';
-import Logo from '../../assets/images/logo/logopapa.png'
 
 const Header = () => {
   const [scrolled, setScrolled] = useState(false);
@@ -37,7 +36,7 @@ const Header = () => {
     const handleClickOutside = (event) => {
       const navbar = document.getElementById('basic-navbar-nav');
       const toggle = document.querySelector('.navbar-toggler');
-      
+
       if (expanded && navbar && !navbar.contains(event.target) && !toggle.contains(event.target)) {
         setExpanded(false);
       }
@@ -60,7 +59,7 @@ const Header = () => {
       >
         <Container className="header-container">
           <Navbar.Brand as={Link} to="/">
-            <img width={300} alt='logo' src={Logo} className="logo-img" />
+            <h2 style={{fontSize:40, fontWeight:'bold', color:'#1a3c6c'}} className="mt-3">CSV</h2>
           </Navbar.Brand>
           <Navbar.Toggle aria-controls="basic-navbar-nav" className="custom-toggler" />
           <Navbar.Collapse id="basic-navbar-nav">
@@ -72,7 +71,7 @@ const Header = () => {
                 Chi Siamo
               </Nav.Link>
               <NavDropdown title={
-                <span style={{marginTop:-8}} className="dropdown-toggle nav-link">
+                <span style={{ marginTop: -8 }} className="dropdown-toggle nav-link">
                   Servizi
                 </span>
               } id="servizi-dropdown">

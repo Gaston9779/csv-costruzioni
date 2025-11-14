@@ -3,5 +3,5 @@
   <rect x="100" y="100" width="600" height="400" rx="8" fill="#1A3C6C"/>
   <path d="M250 250L550 450M250 450L550 250" stroke="#FFA500" stroke-width="20" stroke-linecap="round"/>
   <text x="400" y="520" font-family="Montserrat" font-weight="700" font-size="24" fill="#1A3C6C" text-anchor="middle">CSV</text>
-  <text x="400" y="550" font-family="Open Sans" font-weight="400" font-size="16" fill="#666666" text-anchor="middle">Dal 1990 al servizio dei clienti</text>
+  <text x="400" y="550" font-family="Open Sans" font-weight="400" font-size="16" fill="#666666" text-anchor="middle">Dal 2007 al servizio dei clienti</text>
 </svg>

@@ -13,8 +13,8 @@ const Footer = () => {
             <div className="footer-info">
               <h2 className="text-white mb-3">CSV</h2>
               <p>
-                CSV u00e8 un'azienda edile specializzata nella realizzazione di edifici residenziali, 
-                commerciali, direzionali e produttivi di alta qualitu00e0.
+                CSV un'azienda edile specializzata nella realizzazione di edifici residenziali, 
+                commerciali, direzionali e produttivi di alta qualità.
               </p>
               <div className="social-links">
                 <a href="https://facebook.com" className="social-link" target="_blank" rel="noopener noreferrer">
@@ -37,7 +37,7 @@ const Footer = () => {
                 <li><Link to="/chi-siamo">Chi Siamo</Link></li>
                 <li><Link to="/servizi/residenziale">Servizi</Link></li>
                 <li><Link to="/progetti">Progetti</Link></li>
-                <li><Link to="/tecnologia-qualita">Tecnologia e Qualitu00e0</Link></li>
+                <li><Link to="/tecnologia-qualita">Tecnologia e Qualità</Link></li>
                 <li><Link to="/contatti">Contatti</Link></li>
                 <li><Link to="/area-clienti">Area Clienti</Link></li>
               </ul>
@@ -52,7 +52,7 @@ const Footer = () => {
               </p>
               <p>
                 <FontAwesomeIcon icon={['fas', 'phone']} />
-                <span>+39 06 1234567</span>
+                <span>0461/1821559 - 334 2885870</span>
               </p>
               <p>
                 <FontAwesomeIcon icon={['fas', 'envelope']} />
@@ -60,13 +60,13 @@ const Footer = () => {
               </p>
               <div className="footer-map">
                 <iframe 
-                  src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2969.654248770785!2d12.493265!3d41.902782!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zNDHCsDU0JzEwLjAiTiAxMsKwMjknMzUuOCJF!5e0!3m2!1sit!2sit!4v1622731105720!5m2!1sit!2sit" 
+                  src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2769.8!2d11.09425!3d46.14451!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zNDbCsDA4JzQwLjIiTiAxMcKwMDUnMzkuMyJF!5e0!3m2!1sit!2sit!4v1700000000000!5m2!1sit!2sit" 
                   width="100%" 
                   height="150" 
                   style={{ border: 0 }} 
                   allowFullScreen="" 
                   loading="lazy"
-                  title="Mappa sede CSV"
+                  title="Mappa sede CSV - Via della Zarga 42, Lavis"
                 />
               </div>
             </div>
@@ -77,7 +77,7 @@ const Footer = () => {
         <Container>
           <Row className="align-items-center">
             <Col md={6}>
-              <p className="copyright">u00a9 {new Date().getFullYear()} CSV. Tutti i diritti riservati.</p>
+              <p className="copyright">{new Date().getFullYear()} CSV. Tutti i diritti riservati.</p>
             </Col>
             <Col md={6} className="text-md-end">
               <p className="privacy-links">

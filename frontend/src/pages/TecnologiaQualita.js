@@ -90,24 +90,7 @@ const TecnologiaQualita = () => {
               </Card>
             </Col>
 
-            <Col lg={4} md={6} className="mb-4">
-              <Card className="tech-card">
-                <div className="tech-icon">
-                  <FontAwesomeIcon icon={['fas', 'robot']} />
-                </div>
-                <Card.Body>
-                  <Card.Title>Automazione e Robotica</Card.Title>
-                  <Card.Text>
-                    Implementiamo sistemi automatizzati e robotici per aumentare la precisione e la velocità di esecuzione, riducendo i tempi di costruzione e migliorando la sicurezza sul cantiere.
-                  </Card.Text>
-                  <div className="tech-features">
-                    <Badge bg="info">Droni per ispezioni</Badge>
-                    <Badge bg="info">Sistemi di prefabbricazione</Badge>
-                    <Badge bg="info">Macchinari automatizzati</Badge>
-                  </div>
-                </Card.Body>
-              </Card>
-            </Col>
+           
 
             <Col lg={4} md={6} className="mb-4">
               <Card className="tech-card">
@@ -210,58 +193,10 @@ const TecnologiaQualita = () => {
                 </ul>
               </div>
             </Col>
-            <Col lg={6}>
-              <div className="quality-image">
-                <img src="../assets/images/technology/certifications.jpg" alt="Certificazioni CSV" className="img-fluid rounded shadow" />
-              </div>
-            </Col>
+           
           </Row>
 
-          <Row className="align-items-center mb-5 flex-lg-row-reverse">
-            <Col lg={6}>
-              <div className="quality-content">
-                <h3>Controllo Qualità</h3>
-                <p>
-                  Il nostro processo di controllo qualità è rigoroso e sistematico, con verifiche in ogni fase del progetto per garantire che tutti gli standard siano rispettati.
-                </p>
-                <div className="quality-metrics">
-                  <div className="metric-item">
-                    <div className="d-flex justify-content-between">
-                      <span>Conformità ai requisiti del cliente</span>
-                      <span>98%</span>
-                    </div>
-                    <ProgressBar variant="success" now={98} className="mb-3" />
-                  </div>
-                  <div className="metric-item">
-                    <div className="d-flex justify-content-between">
-                      <span>Rispetto delle tempistiche</span>
-                      <span>95%</span>
-                    </div>
-                    <ProgressBar variant="success" now={95} className="mb-3" />
-                  </div>
-                  <div className="metric-item">
-                    <div className="d-flex justify-content-between">
-                      <span>Qualità dei materiali</span>
-                      <span>99%</span>
-                    </div>
-                    <ProgressBar variant="success" now={99} className="mb-3" />
-                  </div>
-                  <div className="metric-item">
-                    <div className="d-flex justify-content-between">
-                      <span>Sicurezza sul lavoro</span>
-                      <span>100%</span>
-                    </div>
-                    <ProgressBar variant="success" now={100} />
-                  </div>
-                </div>
-              </div>
-            </Col>
-            <Col lg={6}>
-              <div className="quality-image">
-                <img src="../assets/images/technology/quality-control.jpg" alt="Controllo Qualità CSV" className="img-fluid rounded shadow" />
-              </div>
-            </Col>
-          </Row>
+        
 
           <Row className="align-items-center">
             <Col lg={6}>

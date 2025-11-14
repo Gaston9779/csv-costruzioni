@@ -515,10 +515,87 @@ const AdminProjects = ({ onStatsUpdate }) => {
     }));
   };
 
+  // Funzione per processare immagini e correggere orientamento EXIF
+  const processImageFile = async (file) => {
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          // Crea canvas per ridimensionare/correggere orientamento
+          const canvas = document.createElement('canvas');
+          const ctx = canvas.getContext('2d');
+          
+          // Imposta dimensioni canvas
+          canvas.width = img.width;
+          canvas.height = img.height;
+          
+          // Disegna immagine
+          ctx.drawImage(img, 0, 0);
+          
+          // Converti canvas in blob
+          canvas.toBlob((blob) => {
+            // Crea nuovo file dal blob
+            const processedFile = new File([blob], file.name, {
+              type: file.type,
+              lastModified: Date.now()
+            });
+            resolve(processedFile);
+          }, file.type, 0.95); // Qualità 95%
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
   // Gestisce la selezione delle immagini
-  const handleImageSelection = (e) => {
-    if (e.target.files) {
-      setSelectedImages(Array.from(e.target.files));
+  const handleImageSelection = async (e) => {
+    if (e.target.files && e.target.files.length > 0) {
+      const files = Array.from(e.target.files);
+      
+      // Validazione dimensione file (max 10MB)
+      const maxSize = 10 * 1024 * 1024; // 10MB
+      const oversizedFiles = files.filter(f => f.size > maxSize);
+      
+      if (oversizedFiles.length > 0) {
+        setError(`Alcuni file superano i 10MB: ${oversizedFiles.map(f => f.name).join(', ')}`);
+        return;
+      }
+      
+      // Separa file HEIC/HEIF da altri formati
+      const heicFiles = files.filter(f => 
+        f.type === 'image/heic' || 
+        f.type === 'image/heif' || 
+        f.name.toLowerCase().endsWith('.heic') || 
+        f.name.toLowerCase().endsWith('.heif')
+      );
+      
+      const standardFiles = files.filter(f => 
+        !heicFiles.includes(f)
+      );
+      
+      try {
+        // Processa file standard (JPG, PNG, etc.)
+        const processedStandard = await Promise.all(
+          standardFiles.map(file => processImageFile(file))
+        );
+        
+        // Per HEIC, li inviamo direttamente al server che li convertirà
+        // Il server deve avere una libreria di conversione HEIC
+        const allFiles = [...processedStandard, ...heicFiles];
+        
+        if (heicFiles.length > 0) {
+          setSuccess(`${heicFiles.length} file HEIC/HEIF verranno convertiti dal server durante il caricamento`);
+          setTimeout(() => setSuccess(''), 3000);
+        }
+        
+        setSelectedImages(allFiles);
+        setError('');
+      } catch (err) {
+        console.error('Errore processamento immagini:', err);
+        setError('Errore nel processamento delle immagini. Riprova.');
+      }
     }
   };
 
@@ -625,12 +702,13 @@ const AdminProjects = ({ onStatsUpdate }) => {
 
 
   // Form Aggiungi/Modifica Progetto
-  const projectForm = (
+  const projectForm = showAddModal || showEditModal ? (
     <Modal
-      show={showAddModal || showEditModal}
+      show={true}
       onHide={() => {
         setShowAddModal(false);
         setShowEditModal(false);
+        setCurrentProject(null);
         resetForm();
       }}
       size="lg"
@@ -799,12 +877,13 @@ const AdminProjects = ({ onStatsUpdate }) => {
                 <Form.Control
                   type="file"
                   multiple
-                  accept="image/*"
+                  accept="image/*,.heic,.heif"
+                  capture="environment"
                   onChange={handleImageSelection}
                   className="mb-2"
                 />
                 <Form.Text className="text-muted">
-                  Seleziona una o più immagini per il progetto
+                  Supporta tutti i formati immagine inclusi HEIC/HEIF da iPhone (max 10MB per file)
                 </Form.Text>
               </Form.Group>
 
@@ -938,7 +1017,7 @@ const AdminProjects = ({ onStatsUpdate }) => {
         </Form>
       </Modal.Body>
     </Modal>
-  );
+  ) : null;
 
   // Tabella dei progetti
   const projectTable = (
@@ -1044,10 +1123,13 @@ const AdminProjects = ({ onStatsUpdate }) => {
   );
 
   // Modal di visualizzazione dettagli progetto
-  const projectViewModal = (
+  const projectViewModal = showViewModal && currentProject ? (
     <Modal
-      show={showViewModal}
-      onHide={() => setShowViewModal(false)}
+      show={true}
+      onHide={() => {
+        setShowViewModal(false);
+        setCurrentProject(null);
+      }}
       size="lg"
     >
       <Modal.Header closeButton>
@@ -1057,7 +1139,7 @@ const AdminProjects = ({ onStatsUpdate }) => {
         </Modal.Title>
       </Modal.Header>
       <Modal.Body>
-        {currentProject && (
+        {(
           <>
             <Row className="mb-4">
               <Col md={8}>
@@ -1245,13 +1327,16 @@ const AdminProjects = ({ onStatsUpdate }) => {
       <Modal.Footer>
         <Button
           variant="primary"
-          onClick={() => setShowViewModal(false)}
+          onClick={() => {
+            setShowViewModal(false);
+            setCurrentProject(null);
+          }}
         >
           Chiudi
         </Button>
       </Modal.Footer>
     </Modal>
-  );
+  ) : null;
 
   return (
     <div className="admin-projects-page">
@@ -1348,41 +1433,49 @@ const AdminProjects = ({ onStatsUpdate }) => {
       {projectViewModal}
 
       {/* Modale di conferma eliminazione */}
-      <Modal
-        show={showDeleteModal}
-        onHide={() => setShowDeleteModal(false)}
-        centered
-      >
-        <Modal.Header closeButton>
-          <Modal.Title>Conferma Eliminazione</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          {error && <Alert variant="danger">{error}</Alert>}
-          {success && <Alert variant="success">{success}</Alert>}
+      {showDeleteModal && currentProject && (
+        <Modal
+          show={true}
+          onHide={() => {
+            setShowDeleteModal(false);
+            setCurrentProject(null);
+          }}
+          centered
+        >
+          <Modal.Header closeButton>
+            <Modal.Title>Conferma Eliminazione</Modal.Title>
+          </Modal.Header>
+          <Modal.Body>
+            {error && <Alert variant="danger">{error}</Alert>}
+            {success && <Alert variant="success">{success}</Alert>}
 
-          <p>Sei sicuro di voler eliminare il progetto <strong>{currentProject?.title}</strong>?</p>
-          <p className="text-danger">Questa azione non può essere annullata.</p>
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowDeleteModal(false)}>
-            Annulla
-          </Button>
-          <Button
-            variant="danger"
-            onClick={handleDeleteProject}
-            disabled={loading}
-          >
-            {loading ? (
-              <Spinner animation="border" size="sm" />
-            ) : (
-              <>
-                <FontAwesomeIcon icon={faTrash} className="me-2" />
-                Elimina
-              </>
-            )}
-          </Button>
-        </Modal.Footer>
-      </Modal>
+            <p>Sei sicuro di voler eliminare il progetto <strong>{currentProject.title}</strong>?</p>
+            <p className="text-danger">Questa azione non può essere annullata.</p>
+          </Modal.Body>
+          <Modal.Footer>
+            <Button variant="secondary" onClick={() => {
+              setShowDeleteModal(false);
+              setCurrentProject(null);
+            }}>
+              Annulla
+            </Button>
+            <Button
+              variant="danger"
+              onClick={handleDeleteProject}
+              disabled={loading}
+            >
+              {loading ? (
+                <Spinner animation="border" size="sm" />
+              ) : (
+                <>
+                  <FontAwesomeIcon icon={faTrash} className="me-2" />
+                  Elimina
+                </>
+              )}
+            </Button>
+          </Modal.Footer>
+        </Modal>
+      )}
     </div>
   );
 }

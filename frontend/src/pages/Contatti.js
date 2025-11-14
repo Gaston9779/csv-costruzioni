@@ -189,13 +189,13 @@ const Contatti = () => {
                 <h3 className="text-center mb-4">La Nostra Sede</h3>
                 <div className="map-container">
                   <iframe 
-                    src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2766.0!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x4782769d0b5f3c15%3A0x3a0d6f4c5d5b9e3a!2sVia%20della%20Zarga%2C%2042%2C%2038015%20Lavis%20TN!5e0!3m2!1sit!2sit!4v1622824292951!5m2!1sit!2sit" 
+                    src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2769.8!2d11.09425!3d46.14451!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zNDbCsDA4JzQwLjIiTiAxMcKwMDUnMzkuMyJF!5e0!3m2!1sit!2sit!4v1700000000000!5m2!1sit!2sit" 
                     width="100%" 
                     height="450" 
                     style={{ border: 0 }} 
                     allowFullScreen="" 
                     loading="lazy"
-                    title="Mappa sede CSV">
+                    title="Mappa sede CSV - Via della Zarga 42, Lavis">
                   </iframe>
                 </div>
               </div>

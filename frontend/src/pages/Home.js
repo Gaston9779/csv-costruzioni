@@ -116,7 +116,7 @@ const Home = () => {
       <section className="hero-section">
         <div className="hero-overlay"></div>
         <Container fluid className="hero-container">
-          <Row style={{paddingLeft:50, paddingRight:50}} className="align-items-center">
+          <Row style={{paddingLeft:50, paddingRight:50, paddingTop:50}} className="align-items-center">
             <Col lg={6} className="hero-content">
               <div className="animate-on-scroll">
                 <h1>Costruiamo il Futuro</h1>
@@ -171,7 +171,7 @@ const Home = () => {
               <div className="feature-icon">
                 <FontAwesomeIcon icon={faCheckCircle} />
               </div>
-              <h3>50+</h3>
+              <h3>30+</h3>
               <p>Professionisti</p>
             </Col>
           </Row>
@@ -200,7 +200,7 @@ const Home = () => {
                   CSV è un'azienda leader nel settore delle costruzioni, con una lunga tradizione di eccellenza e innovazione.
                 </p>
                 <p>
-                  Fondata nel 1990, la nostra azienda si è affermata come un punto di riferimento nel settore edilizio, grazie alla qualità delle nostre costruzioni e alla professionalità del nostro team.
+                  Fondata nel 2007, la nostra azienda si è affermata come un punto di riferimento nel settore edilizio, grazie alla qualità delle nostre costruzioni e alla professionalità del nostro team.
                 </p>
                 <div className="about-features">
                   <div className="feature">

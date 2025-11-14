@@ -199,7 +199,7 @@ const ChiSiamo = () => {
                   <div className="timeline-item">
                     <div className="timeline-marker"></div>
                     <div className="timeline-content">
-                      <h4>2000</h4>
+                      <h4>2007</h4>
                       <p>CsV nasce per costruire edifici a basso consumo energetico.</p>
                     </div>
                   </div>
