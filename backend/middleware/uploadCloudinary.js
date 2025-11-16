@@ -2,6 +2,8 @@ const multer = require('multer');
 const { CloudinaryStorage } = require('multer-storage-cloudinary');
 const cloudinary = require('../config/cloudinary');
 
+console.log('📦 Upload Cloudinary middleware caricato');
+
 // Storage per immagini progetti
 const projectStorage = new CloudinaryStorage({
   cloudinary: cloudinary,
@@ -29,6 +31,7 @@ const uploadProjectImages = multer({
     fileSize: 10 * 1024 * 1024 // 10MB max
   },
   fileFilter: (req, file, cb) => {
+    console.log('🔍 FileFilter chiamato per:', file.fieldname, file.originalname);
     if (file.mimetype.startsWith('image/')) {
       cb(null, true);
     } else {
@@ -36,6 +39,8 @@ const uploadProjectImages = multer({
     }
   }
 });
+
+console.log('✅ uploadProjectImages configurato');
 
 // Multer upload per appartamenti
 const uploadApartmentImages = multer({
