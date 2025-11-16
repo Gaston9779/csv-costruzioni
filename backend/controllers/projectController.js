@@ -607,10 +607,8 @@ module.exports.createProject = async (req, res, next) => {
   try {
     console.log('Inizio createProject');
     
-    // Se è una richiesta multipart, gestiscila manualmente
-    if (req.headers['content-type'] && req.headers['content-type'].includes('multipart/form-data')) {
-      return handleMultipartProjectCreation(req, res);
-    }
+    // Il middleware Cloudinary ha già processato i file in req.files
+    // NON usare busboy che bypassa Cloudinary
     
     console.log('Files ricevuti:', req.files ? req.files.length : 'nessun file');
     console.log('Body:', Object.keys(req.body));
@@ -932,10 +930,8 @@ module.exports.updateProject = async (req, res) => {
   try {
     console.log('Inizio updateProject');
     
-    // Se è una richiesta multipart, gestiscila manualmente
-    if (req.headers['content-type'] && req.headers['content-type'].includes('multipart/form-data')) {
-      return handleMultipartProjectUpdate(req, res);
-    }
+    // Il middleware Cloudinary ha già processato i file in req.files
+    // NON usare busboy che bypassa Cloudinary
     
     console.log('Body ricevuto per update:', Object.keys(req.body));
     console.log('Files ricevuti per update:', req.files ? req.files.length : 'nessun file');
