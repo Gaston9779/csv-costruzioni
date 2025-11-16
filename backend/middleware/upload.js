@@ -27,21 +27,27 @@ const storage = multer.diskStorage({
   }
 });
 
-// Filtro per i file (PDF, JPG, PNG)
+// Filtro per i file (PDF, JPG, PNG, e formati mobile)
 const fileFilter = (req, file, cb) => {
-  // Array di MIME types consentiti
+  // Array di MIME types consentiti - include formati mobile
   const allowedMimeTypes = [
     'application/pdf',  // PDF
     'image/jpeg',       // JPG/JPEG
     'image/jpg',        // anche JPG (alcune implementazioni usano questo)
     'image/png',        // PNG
-    'image/gif'         // GIF
+    'image/gif',        // GIF
+    'image/webp',       // WebP
+    'image/heic',       // iPhone/iOS HEIC
+    'image/heif',       // iPhone/iOS HEIF
+    'image/bmp',        // BMP
+    'image/tiff',       // TIFF
+    'image/svg+xml'     // SVG
   ];
   
-  if (allowedMimeTypes.includes(file.mimetype)) {
+  if (allowedMimeTypes.includes(file.mimetype.toLowerCase())) {
     cb(null, true);
   } else {
-    cb(new Error('Solo file PDF, JPG, PNG e GIF sono consentiti'), false);
+    cb(new Error('Solo file PDF e immagini (JPG, PNG, GIF, WebP, HEIC, HEIF) sono consentiti'), false);
   }
 };
 

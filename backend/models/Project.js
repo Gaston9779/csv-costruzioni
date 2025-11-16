@@ -25,14 +25,19 @@ const apartmentSchema = new mongoose.Schema({
     type: Number
   },
   images: [{
-    filename: String,
-    path: String,
-    originalName: String
+    _id: mongoose.Schema.Types.ObjectId,
+    filename: { type: String, required: true },
+    path: { type: String, required: true },
+    originalName: String,
+    mimetype: String,
+    size: Number,
+    url: { type: String, required: true },
+    description: String
   }],
   status: {
     type: String,
-    enum: ['In corso', 'Completato', 'In pausa', 'Pianificato'],
-    default: 'Pianificato'
+    enum: ['In corso', 'Completato', 'In attesa', 'Annullato'],
+    default: 'In corso'
   }
 }, { _id: true });
 
@@ -62,14 +67,19 @@ const projectSchema = new mongoose.Schema({
     enum: ['Residenziale', 'Commerciale', 'Produttivo', 'Direzionale', 'Altro']
   },
   images: [{
-    filename: String,
-    path: String,
-    originalName: String
+    _id: mongoose.Schema.Types.ObjectId,
+    filename: { type: String, required: true },
+    path: { type: String, required: true },
+    originalName: String,
+    mimetype: String,
+    size: Number,
+    url: { type: String, required: true },
+    description: String
   }],
   status: {
     type: String,
-    enum: ['In corso', 'Completato', 'In pausa', 'Pianificato'],
-    default: 'Pianificato'
+    enum: ['In corso', 'Completato', 'In attesa', 'Annullato'],
+    default: 'In corso'
   },
   startDate: {
     type: Date

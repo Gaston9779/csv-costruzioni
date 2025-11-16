@@ -6,6 +6,7 @@ const path = require('path');
 const fs = require('fs');
 const Project = require('../models/Project');
 const Client = require('../models/Client');
+const { formatCloudinaryImages, deleteCloudinaryImage, deleteMultipleCloudinaryImages } = require('../utils/cloudinaryHelper');
 
 // Configurazione multer per upload immagini progetti e appartamenti
 const storage = multer.diskStorage({
@@ -42,14 +43,28 @@ const upload = multer({
     fileSize: 10 * 1024 * 1024 // 10MB
   },
   fileFilter: (req, file, cb) => {
-    const allowedTypes = /jpeg|jpg|png|gif|webp/;
-    const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
-    const mimetype = allowedTypes.test(file.mimetype);
+    // Supporta tutti i formati immagine comuni, inclusi quelli mobile
+    const allowedMimeTypes = [
+      'image/jpeg',
+      'image/jpg', 
+      'image/png',
+      'image/gif',
+      'image/webp',
+      'image/heic',  // iPhone/iOS
+      'image/heif',  // iPhone/iOS
+      'image/bmp',
+      'image/tiff',
+      'image/svg+xml'
+    ];
+    
+    const allowedExtensions = /\.(jpg|jpeg|png|gif|webp|heic|heif|bmp|tiff|svg)$/i;
+    const extname = allowedExtensions.test(path.extname(file.originalname).toLowerCase());
+    const mimetype = allowedMimeTypes.includes(file.mimetype.toLowerCase());
 
-    if (mimetype && extname) {
+    if (mimetype || extname) {
       return cb(null, true);
     } else {
-      cb(new Error('Solo immagini sono permesse (jpeg, jpg, png, gif, webp)'));
+      cb(new Error('Solo immagini sono permesse (jpeg, jpg, png, gif, webp, heic, heif)'));
     }
   }
 });
@@ -170,8 +185,9 @@ const handleMultipartProjectUpdate = async (req, res) => {
       req.body = fields;
       req.files = files;
       
-      // Chiama la logica originale di updateProject
-      return updateProjectLogic(req, res);
+      // Chiama la logica di update esistente senza multipart
+      req.headers['content-type'] = 'application/json'; // Evita loop infinito
+      return module.exports.updateProject(req, res);
     });
     
     req.pipe(bb);
@@ -220,21 +236,12 @@ const createProjectLogic = async (req, res) => {
       });
     }
 
-    // Gestione immagini del progetto principale
+    // Gestione immagini del progetto principale con Cloudinary
     const images = [];
     if (req.files && req.files.length > 0) {
       const projectImages = req.files.filter(file => file.fieldname === 'images');
-      
-      projectImages.forEach(file => {
-        images.push({
-          filename: file.filename,
-          path: file.path,
-          size: file.size,
-          mimetype: file.mimetype,
-          url: `/uploads/projects/${file.filename}`,
-          description: ''
-        });
-      });
+      const formattedImages = formatCloudinaryImages(projectImages);
+      images.push(...formattedImages);
     }
 
     // Crea il progetto base
@@ -306,18 +313,18 @@ const createProjectLogic = async (req, res) => {
             images: []
           };
           
-          // Aggiungi immagini associate a questo appartamento
+          // Aggiungi immagini associate a questo appartamento (Cloudinary)
           apartmentImages.forEach((file, fileIndex) => {
             const metadata = metadataMap[fileIndex];
             if (metadata && metadata.apartmentIndex === i) {
               apartment.images.push({
-                _id: new mongoose.Types.ObjectId(),
                 filename: file.filename,
-                path: file.path,
+                url: file.path,
                 originalName: file.originalname,
-                mimetype: file.mimetype,
+                path: file.path,
                 size: file.size,
-                url: `/uploads/apartments/${file.filename}`,
+                mimetype: file.mimetype,
+                cloudinaryId: file.filename,
                 description: metadata.description || ''
               });
             }
@@ -744,30 +751,9 @@ module.exports.createProject = async (req, res, next) => {
         // Prepara array di appartamenti
         projectData.apartments = [];
         
-        // Gestione immagini degli appartamenti ricevute come file binari
+        // Gestione immagini degli appartamenti ricevute come file binari (Cloudinary)
         const apartmentImages = req.files ? req.files.filter(file => file.fieldname === 'apartmentImages') : [];
-        console.log(`Trovate ${apartmentImages.length} immagini di appartamenti`);
-        
-        // Sposta i file degli appartamenti dalla cartella temporanea alla cartella appartamenti
-        apartmentImages.forEach(file => {
-          const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-          const extension = path.extname(file.originalname);
-          const newFilename = 'apartment-' + uniqueSuffix + extension;
-          const apartmentsDir = path.join(__dirname, '../uploads/apartments');
-          const newPath = path.join(apartmentsDir, newFilename);
-          
-          // Crea la directory se non esiste
-          if (!fs.existsSync(apartmentsDir)) {
-            fs.mkdirSync(apartmentsDir, { recursive: true });
-          }
-          
-          // Sposta il file
-          fs.renameSync(file.path, newPath);
-          
-          // Aggiorna le proprietà del file
-          file.path = newPath;
-          file.filename = newFilename;
-        });
+        console.log(`Trovate ${apartmentImages.length} immagini di appartamenti da Cloudinary`);
         
         // Mappa per tenere traccia dei metadati delle immagini
         const metadataMap = {};
@@ -803,19 +789,20 @@ module.exports.createProject = async (req, res, next) => {
             images: [] // Inizializziamo l'array delle immagini
           };
           
-          // Aggiungi le immagini binarie associate a questo appartamento
+          // Aggiungi le immagini Cloudinary associate a questo appartamento
           apartmentImages.forEach((file, fileIndex) => {
             const metadata = metadataMap[fileIndex];
             if (metadata && metadata.apartmentIndex === i) {
-              console.log(`Associando immagine ${file.filename} all'appartamento ${i}`);
+              console.log(`Associando immagine Cloudinary ${file.filename} all'appartamento ${i}`);
+              
               apartment.images.push({
-                _id: new mongoose.Types.ObjectId(),
                 filename: file.filename,
+                url: file.path,
                 path: file.path,
                 originalName: file.originalname,
-                mimetype: file.mimetype,
                 size: file.size,
-                url: `/uploads/apartments/${file.filename}`,
+                mimetype: file.mimetype,
+                cloudinaryId: file.filename,
                 description: metadata.description || ''
               });
             }
@@ -1008,9 +995,14 @@ module.exports.updateProject = async (req, res) => {
         if (Array.isArray(imagesToDeleteArray) && imagesToDeleteArray.length > 0) {
           // Filtra le immagini da mantenere
           const updatedImages = existingProject.images.filter(img => {
+            if (!img || !img._id) return true; // Mantieni se img non è valido
             const shouldDelete = imagesToDeleteArray.includes(img._id.toString());
-            if (shouldDelete && fs.existsSync(img.path)) {
-              fs.unlinkSync(img.path); // Elimina il file
+            if (shouldDelete && img.path && fs.existsSync(img.path)) {
+              try {
+                fs.unlinkSync(img.path); // Elimina il file
+              } catch (e) {
+                console.error('Errore eliminazione file:', e);
+              }
             }
             return !shouldDelete;
           });
@@ -1027,13 +1019,7 @@ module.exports.updateProject = async (req, res) => {
     if (req.files && req.files.length > 0) {
       const projectImages = req.files.filter(file => file.fieldname === 'images');
       if (projectImages.length > 0) {
-        const newImages = projectImages.map(file => ({
-          filename: file.filename,
-          path: file.path,
-          size: file.size,
-          mimetype: file.mimetype,
-          url: `/uploads/projects/${file.filename}`
-        }));
+        const newImages = formatCloudinaryImages(projectImages);
 
         // Aggiungi alle immagini esistenti o sostituisci
         if (replaceImages === 'true') {
@@ -1091,6 +1077,29 @@ module.exports.updateProject = async (req, res) => {
       for (let i = 0; i < parsedApartments.length; i++) {
         const apt = parsedApartments[i];
         
+        // Gestisci eliminazione immagini appartamento da Cloudinary
+        let existingImages = apt.images || [];
+        if (apt.imagesToDelete && Array.isArray(apt.imagesToDelete) && apt.imagesToDelete.length > 0) {
+          // Raccogli public IDs da eliminare
+          const imagesToDeleteFromCloud = [];
+          
+          // Filtra le immagini da mantenere
+          existingImages = existingImages.filter(img => {
+            if (!img || !img._id) return true;
+            const shouldDelete = apt.imagesToDelete.includes(img._id.toString()) || apt.imagesToDelete.includes(img._id);
+            if (shouldDelete && (img.cloudinaryId || img.filename)) {
+              imagesToDeleteFromCloud.push(img.cloudinaryId || img.filename);
+            }
+            return !shouldDelete;
+          });
+          
+          // Elimina da Cloudinary
+          if (imagesToDeleteFromCloud.length > 0) {
+            await deleteMultipleCloudinaryImages(imagesToDeleteFromCloud);
+            console.log(`Eliminate ${imagesToDeleteFromCloud.length} immagini appartamento da Cloudinary`);
+          }
+        }
+        
         // Creiamo la struttura base dell'appartamento
         const apartment = {
           _id: apt._id, // Mantieni l'ID se esiste (per update)
@@ -1102,14 +1111,14 @@ module.exports.updateProject = async (req, res) => {
           bathrooms: apt.bathrooms || 0,
           budget: apt.budget || 0,
           status: apt.status || 'In corso',
-          images: apt.images || [] // Mantieni le immagini esistenti se presenti
+          images: existingImages // Usa le immagini filtrate
         };
         
-        // Aggiungi le nuove immagini binarie associate a questo appartamento
+        // Aggiungi le nuove immagini Cloudinary associate a questo appartamento
         apartmentImages.forEach((file, fileIndex) => {
           const metadata = metadataMap[fileIndex];
           if (metadata && metadata.apartmentIndex === i) {
-            console.log(`UPDATE PROJECT - Associando immagine ${file.filename} all'appartamento ${i}`);
+            console.log(`UPDATE PROJECT - Associando immagine Cloudinary ${file.filename} all'appartamento ${i}`);
             apartment.images.push({
               _id: new mongoose.Types.ObjectId(),
               filename: file.filename,
@@ -1117,7 +1126,8 @@ module.exports.updateProject = async (req, res) => {
               originalName: file.originalname,
               mimetype: file.mimetype,
               size: file.size,
-              url: `/uploads/apartments/${file.filename}`,
+              url: file.path,
+              cloudinaryId: file.filename,
               description: metadata.description || ''
             });
           }
@@ -1370,9 +1380,9 @@ module.exports.deleteProjectImage = async (req, res) => {
 
     const image = project.images[imageIndex];
     
-    // Elimina il file fisico
-    if (fs.existsSync(image.path)) {
-      fs.unlinkSync(image.path);
+    // Elimina da Cloudinary
+    if (image.cloudinaryId || image.filename) {
+      await deleteCloudinaryImage(image.cloudinaryId || image.filename);
     }
 
     // Rimuovi dall'array
@@ -1875,10 +1885,9 @@ module.exports.addApartmentImages = async (req, res) => {
     // Trova il progetto
     const project = await Project.findById(projectId);
     if (!project) {
-      // Elimina i file caricati se il progetto non esiste
-      files.forEach(file => {
-        fs.unlinkSync(file.path);
-      });
+      // Elimina da Cloudinary se il progetto non esiste
+      const publicIds = files.map(f => f.filename);
+      await deleteMultipleCloudinaryImages(publicIds);
       return res.status(404).json({
         success: false,
         message: 'Progetto non trovato'
@@ -1888,10 +1897,9 @@ module.exports.addApartmentImages = async (req, res) => {
     // Trova l'appartamento
     const apartmentIndex = project.apartments.findIndex(apt => apt._id.toString() === apartmentId);
     if (apartmentIndex === -1) {
-      // Elimina i file caricati se l'appartamento non esiste
-      files.forEach(file => {
-        fs.unlinkSync(file.path);
-      });
+      // Elimina da Cloudinary se l'appartamento non esiste
+      const publicIds = files.map(f => f.filename);
+      await deleteMultipleCloudinaryImages(publicIds);
       return res.status(404).json({
         success: false,
         message: 'Appartamento non trovato'
@@ -1903,8 +1911,11 @@ module.exports.addApartmentImages = async (req, res) => {
       project.apartments[apartmentIndex].images = [];
     }
     
+    // Formatta le immagini da Cloudinary
+    const formattedImages = formatCloudinaryImages(files);
+    
     // Aggiungi le immagini all'appartamento
-    files.forEach(file => {
+    formattedImages.forEach((image, index) => {
       // Cerca le descrizioni per questa immagine dell'appartamento
       let description = '';
       const imageDescField = `apartment_${apartmentIndex}_image_description`;
@@ -1912,7 +1923,7 @@ module.exports.addApartmentImages = async (req, res) => {
       if (req.body[imageDescField]) {
         try {
           const descData = JSON.parse(req.body[imageDescField]);
-          if (descData.filename === file.originalname && descData.description) {
+          if (descData.filename === image.originalName && descData.description) {
             description = descData.description;
           }
         } catch (e) {
@@ -1920,22 +1931,13 @@ module.exports.addApartmentImages = async (req, res) => {
         }
       }
       
-      // Ottieni il filename e costruisci l'URL
-      const filename = path.basename(file.path);
-      const url = `/uploads/apartments/${filename}`;
-      
       // Log per debug
-      console.log(`✅ Aggiunta immagine all'appartamento ${apartmentId}: filename=${filename}, url=${url}`);
+      console.log(`✅ Aggiunta immagine Cloudinary all'appartamento ${apartmentId}: ${image.url}`);
       
-      // Salva l'immagine con TUTTI i campi necessari, incluso URL
+      // Aggiungi immagine con descrizione
       project.apartments[apartmentIndex].images.push({
-        filename: filename,
-        path: file.path,
-        originalName: file.originalname,
-        description: description,
-        mimetype: file.mimetype,
-        size: file.size,
-        url: url // Aggiungi l'URL completo qui!
+        ...image,
+        description: description
       });
     });
     
@@ -2002,9 +2004,9 @@ module.exports.deleteApartmentImage = async (req, res) => {
 
     const image = project.apartments[apartmentIndex].images[imageIndex];
     
-    // Elimina il file fisico
-    if (fs.existsSync(image.path)) {
-      fs.unlinkSync(image.path);
+    // Elimina da Cloudinary
+    if (image.cloudinaryId || image.filename) {
+      await deleteCloudinaryImage(image.cloudinaryId || image.filename);
     }
     
     // Rimuovi dall'array
