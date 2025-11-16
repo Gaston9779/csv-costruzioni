@@ -235,12 +235,20 @@ const createProjectLogic = async (req, res) => {
       });
     }
 
-    // Gestione immagini del progetto principale con Cloudinary
+    // Gestione immagini del progetto principale
     const images = [];
     if (req.files && req.files.length > 0) {
       const projectImages = req.files.filter(file => file.fieldname === 'images');
-      const formattedImages = formatCloudinaryImages(projectImages);
-      images.push(...formattedImages);
+      
+      projectImages.forEach(file => {
+        images.push({
+          filename: file.filename,
+          path: file.path,
+          size: file.size,
+          mimetype: file.mimetype,
+          url: `/uploads/projects/${file.filename}`
+        });
+      });
     }
 
     // Crea il progetto base
@@ -742,11 +750,10 @@ module.exports.createProject = async (req, res, next) => {
             if (metadata && metadata.apartmentIndex === i) {
               console.log(`Associando immagine Cloudinary ${file.filename} all'appartamento ${i}`);
               
-              const imageUrl = file.secure_url || file.url || file.path;
               apartment.images.push({
                 filename: file.filename,
-                url: imageUrl,
-                path: imageUrl,
+                url: `/uploads/apartments/${file.filename}`,
+                path: file.path,
                 originalName: file.originalname,
                 size: file.size,
                 mimetype: file.mimetype,
@@ -967,7 +974,13 @@ module.exports.updateProject = async (req, res) => {
     if (req.files && req.files.length > 0) {
       const projectImages = req.files.filter(file => file.fieldname === 'images');
       if (projectImages.length > 0) {
-        const newImages = formatCloudinaryImages(projectImages);
+        const newImages = projectImages.map(file => ({
+          filename: file.filename,
+          path: file.path,
+          size: file.size,
+          mimetype: file.mimetype,
+          url: `/uploads/projects/${file.filename}`
+        }));
 
         // Aggiungi alle immagini esistenti o sostituisci
         if (replaceImages === 'true') {
@@ -1859,8 +1872,14 @@ module.exports.addApartmentImages = async (req, res) => {
       project.apartments[apartmentIndex].images = [];
     }
     
-    // Formatta le immagini da Cloudinary
-    const formattedImages = formatCloudinaryImages(files);
+    // Formatta le immagini
+    const formattedImages = files.map(file => ({
+      filename: file.filename,
+      path: file.path,
+      size: file.size,
+      mimetype: file.mimetype,
+      url: `/uploads/apartments/${file.filename}`
+    }));
     
     // Aggiungi le immagini all'appartamento
     formattedImages.forEach((image, index) => {
