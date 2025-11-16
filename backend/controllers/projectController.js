@@ -651,64 +651,11 @@ module.exports.createProject = async (req, res, next) => {
       });
     }
 
-    // Gestione immagini del progetto principale
-    const images = [];
-    if (req.files && req.files.length > 0) {
-      const projectImages = req.files.filter(file => file.fieldname === 'images');
-      
-      // Sposta i file dalla cartella temporanea alla cartella progetti
-      projectImages.forEach(file => {
-        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-        const extension = path.extname(file.originalname);
-        const newFilename = 'project-' + uniqueSuffix + extension;
-        const projectsDir = path.join(__dirname, '../uploads/projects');
-        const newPath = path.join(projectsDir, newFilename);
-        
-        // Crea la directory se non esiste
-        if (!fs.existsSync(projectsDir)) {
-          fs.mkdirSync(projectsDir, { recursive: true });
-        }
-        
-        // Sposta il file
-        fs.renameSync(file.path, newPath);
-        
-        // Aggiorna le proprietà del file
-        file.path = newPath;
-        file.filename = newFilename;
-      });
-      
-      // Ottieni le descrizioni delle immagini se presenti
-      let imageDescriptions = {};
-      if (req.body.imageDescriptions) {
-        try {
-          const descriptions = Array.isArray(req.body.imageDescriptions) 
-            ? req.body.imageDescriptions.map(d => JSON.parse(d))
-            : [JSON.parse(req.body.imageDescriptions)];
-          
-          descriptions.forEach(desc => {
-            if (desc.filename && desc.description) {
-              imageDescriptions[desc.filename] = desc.description;
-            }
-          });
-          
-          console.log('Descrizioni immagini ricevute:', imageDescriptions);
-        } catch (e) {
-          console.error('Errore nel parsing delle descrizioni immagini:', e);
-        }
-      }
-      
-      projectImages.forEach(file => {
-        images.push({
-          filename: file.filename,
-          path: file.path,
-          size: file.size,
-          mimetype: file.mimetype,
-          url: `/uploads/projects/${file.filename}`,
-          // Aggiungi la descrizione se esiste per questo file
-          description: imageDescriptions[file.originalname] || ''
-        });
-      });
-    }
+    // Gestione immagini del progetto principale (Cloudinary)
+    const projectImages = req.files ? req.files.filter(file => file.fieldname === 'images') : [];
+    const images = formatCloudinaryImages(projectImages);
+    
+    console.log('Immagini progetto formattate:', images.length);
 
     // Crea il progetto base
     const projectData = {
@@ -749,8 +696,9 @@ module.exports.createProject = async (req, res, next) => {
         // Prepara array di appartamenti
         projectData.apartments = [];
         
-        // Gestione immagini degli appartamenti ricevute come file binari (Cloudinary)
+        // Gestione immagini degli appartamenti (Cloudinary)
         const apartmentImages = req.files ? req.files.filter(file => file.fieldname === 'apartmentImages') : [];
+        console.log('Immagini appartamenti trovate:', apartmentImages.length);
         console.log(`Trovate ${apartmentImages.length} immagini di appartamenti da Cloudinary`);
         
         // Mappa per tenere traccia dei metadati delle immagini
@@ -793,10 +741,11 @@ module.exports.createProject = async (req, res, next) => {
             if (metadata && metadata.apartmentIndex === i) {
               console.log(`Associando immagine Cloudinary ${file.filename} all'appartamento ${i}`);
               
+              const imageUrl = file.secure_url || file.url || file.path;
               apartment.images.push({
                 filename: file.filename,
-                url: file.path,
-                path: file.path,
+                url: imageUrl,
+                path: imageUrl,
                 originalName: file.originalname,
                 size: file.size,
                 mimetype: file.mimetype,
@@ -806,8 +755,8 @@ module.exports.createProject = async (req, res, next) => {
             }
           });
           
-          // Se l'appartamento ha immagini, le processiamo
-          if (apt.images && Array.isArray(apt.images)) {
+          // NON processare immagini base64 - solo Cloudinary
+          if (false && apt.images && Array.isArray(apt.images)) {
             for (let j = 0; j < apt.images.length; j++) {
               const imgData = apt.images[j];
               // Se abbiamo un'immagine base64
