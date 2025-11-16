@@ -66,6 +66,7 @@ section {
 .section-header {
   margin-bottom: 3rem;
   text-align: center;
+  padding: 0 15px;
 }
 
 .section-header h2 {
@@ -78,7 +79,9 @@ section {
 .section-header h2:after {
   content: '';
   position: absolute;
-  left: 20%;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: -10px;
   width: 80px;
   height: 3px;
   background-color: var(--secondary-color);
@@ -87,17 +90,33 @@ section {
 .section-header p {
   font-size: 1.1rem;
   color: var(--gray-color);
+  margin-top: 1.5rem;
+}
+
+@media (max-width: 767.98px) {
+  .section-header {
+    margin-bottom: 2rem;
+  }
+  
+  .section-header h2 {
+    font-size: 1.8rem;
+  }
+  
+  .section-header p {
+    font-size: 1rem;
+  }
 }
 
 /* Buttons */
 .btn {
   font-family: 'Montserrat', sans-serif;
   font-weight: 500;
-  padding: 0.75rem 1.5rem;
+  padding: 0.75rem 2rem;
   border-radius: var(--border-radius);
   transition: all 0.3s ease;
   text-transform: uppercase;
   letter-spacing: 1px;
+  border: 2px solid transparent;
   font-size: 0.9rem;
   position: relative;
   overflow: hidden;

@@ -7,7 +7,8 @@
   background-color: var(--primary-color);
   color: #fff;
   overflow: hidden;
-  margin-top: 30px;
+  margin-top: 90px;
+  padding: 60px 0;
 }
 
 .hero-overlay {
@@ -24,11 +25,11 @@
   position: relative;
   z-index: 2;
   height: 100%;
-  padding: 80px 0;
+  max-width: 1200px;
 }
 
 .hero-content {
-  padding: 50px;
+  padding: 0;
 }
 
 .hero-content h1 {
@@ -38,6 +39,7 @@
   line-height: 1.2;
 }
 
+
 .hero-content p {
   font-size: 1.2rem;
   margin-bottom: 2rem;
@@ -45,6 +47,13 @@
 
 .hero-buttons {
   margin-top: 2rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.hero-buttons .btn {
+  margin: 0 !important;
 }
 
 .hero-image-container {
@@ -75,7 +84,7 @@
 
 /* Features Section */
 .features-section {
-  padding: 80px 0;
+  padding: 60px 0;
   background-color: #f8f9fa;
   text-align: center;
 }
@@ -109,7 +118,7 @@
 
 /* About Section */
 .about-section {
-  padding: 100px 0;
+  padding: 80px 0;
   background-color: #fff;
 }
 
@@ -171,7 +180,7 @@
 
 /* Services Section */
 .services-section {
-  padding: 100px 0;
+  padding: 80px 0;
   background-color: #f8f9fa;
 }
 
@@ -258,8 +267,8 @@
 
 /* Projects Section */
 .projects-section {
-  padding: 5rem 0;
-  background-color: #f8f9fa;
+  padding: 80px 0;
+  background-color: #fff;
 }
 
 .project-card {
@@ -458,7 +467,7 @@
 
 /* CTA Section */
 .cta-section {
-  padding: 100px 0;
+  padding: 80px 0;
   background-color: var(--primary-color);
   color: #fff;
   position: relative;
@@ -499,15 +508,31 @@
 @media (max-width: 991.98px) {
   .hero-section {
     min-height: auto;
+    padding: 40px 0;
   }
   
   .hero-content {
-    padding: 50px 20px;
     text-align: center;
   }
   
   .hero-content h1 {
     font-size: 2.5rem;
+  }
+  
+  .about-section {
+    padding: 60px 0;
+  }
+  
+  .services-section {
+    padding: 60px 0;
+  }
+  
+  .projects-section {
+    padding: 60px 0;
+  }
+  
+  .cta-section {
+    padding: 60px 0;
   }
   
   .about-experience {
@@ -520,8 +545,53 @@
 }
 
 @media (max-width: 767.98px) {
+  .hero-section {
+    margin-top: 70px;
+    padding: 30px 0;
+  }
+  
+  .hero-content h1 {
+    font-size: 2rem;
+  }
+  
+  .hero-content p {
+    font-size: 1rem;
+  }
+  
+  .hero-buttons {
+    flex-direction: column;
+  }
+  
+  .hero-buttons .btn {
+    width: 100%;
+  }
+  
+  .features-section {
+    padding: 40px 0;
+  }
+  
   .feature-item {
     margin-bottom: 30px;
+  }
+  
+  .about-section {
+    padding: 40px 0;
+  }
+  
+  .services-section {
+    padding: 40px 0;
+  }
+  
+  .projects-section {
+    padding: 40px 0;
+  }
+  
+  .cta-section {
+    padding: 40px 0;
+  }
+  
+  .cta-content h2 {
+    font-size: 1.8rem;
   }
   
   .service-card {
@@ -530,5 +600,27 @@
   
   .testimonial-card {
     margin-bottom: 30px;
+  }
+}
+
+@media (max-width: 575.98px) {
+  .hero-section {
+    margin-top: 60px;
+  }
+  
+  .hero-content h1 {
+    font-size: 1.75rem;
+  }
+  
+  .section-header h2 {
+    font-size: 1.75rem;
+  }
+  
+  .features-section,
+  .about-section,
+  .services-section,
+  .projects-section,
+  .cta-section {
+    padding: 30px 0;
   }
 }

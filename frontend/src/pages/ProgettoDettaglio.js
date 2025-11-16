@@ -14,7 +14,7 @@ const ProgettoDettaglio = () => {
   const [project, setProject] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [activeTab, setActiveTab] = useState('descrizione');
+  const [activeTab, setActiveTab] = useState('info');
 
   useEffect(() => {
     const fetchProject = async () => {
@@ -186,38 +186,207 @@ const ProgettoDettaglio = () => {
               className="mb-4"
               fill
             >
-              <Tab eventKey="descrizione" title="Descrizione">
+              <Tab eventKey="info" title="Info">
                 <div className="p-4 bg-white rounded shadow-sm">
+                  {/* Descrizione */}
                   <div className="mb-4">
-                    {project.description ? (
-                      <p style={{whiteSpace: 'pre-line'}}>{project.description}</p>
-                    ) : (
-                      <p className="text-muted">Nessuna descrizione disponibile</p>
-                    )}
+                    <h4 className="mb-3 d-flex align-items-center">
+                      <FontAwesomeIcon icon={faTags} className="me-2 text-primary" />
+                      Descrizione Progetto
+                    </h4>
+                    <div className="description-content p-3 bg-light rounded">
+                      {project.description ? (
+                        <p style={{whiteSpace: 'pre-line', marginBottom: 0}}>{project.description}</p>
+                      ) : (
+                        <p className="text-muted mb-0">Nessuna descrizione disponibile</p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Dettagli Progetto */}
+                  <div className="mb-4">
+                    <h4 className="mb-3 d-flex align-items-center">
+                      <FontAwesomeIcon icon={faBuilding} className="me-2 text-primary" />
+                      Dettagli Progetto
+                    </h4>
+                    <Row className="g-3">
+                      <Col md={6}>
+                        <Card className="info-card h-100 border-0 shadow-sm">
+                          <Card.Body>
+                            <div className="d-flex align-items-center mb-2">
+                              <FontAwesomeIcon icon={faTags} className="text-primary me-2" size="lg" />
+                              <div>
+                                <small className="text-muted d-block">Categoria</small>
+                                <strong>{project.category}</strong>
+                              </div>
+                            </div>
+                          </Card.Body>
+                        </Card>
+                      </Col>
+                      <Col md={6}>
+                        <Card className="info-card h-100 border-0 shadow-sm">
+                          <Card.Body>
+                            <div className="d-flex align-items-center mb-2">
+                              <FontAwesomeIcon icon={faClock} className="text-primary me-2" size="lg" />
+                              <div>
+                                <small className="text-muted d-block">Stato</small>
+                                <Badge bg={getStatusColor(project.status)} className="fs-6">{project.status}</Badge>
+                              </div>
+                            </div>
+                          </Card.Body>
+                        </Card>
+                      </Col>
+                      <Col md={6}>
+                        <Card className="info-card h-100 border-0 shadow-sm">
+                          <Card.Body>
+                            <div className="d-flex align-items-center mb-2">
+                              <FontAwesomeIcon icon={faMapMarkerAlt} className="text-primary me-2" size="lg" />
+                              <div>
+                                <small className="text-muted d-block">Ubicazione</small>
+                                <strong>{project.location || 'Non specificata'}</strong>
+                              </div>
+                            </div>
+                          </Card.Body>
+                        </Card>
+                      </Col>
+                      <Col md={6}>
+                        <Card className="info-card h-100 border-0 shadow-sm">
+                          <Card.Body>
+                            <div className="d-flex align-items-center mb-2">
+                              <FontAwesomeIcon icon={faEuroSign} className="text-primary me-2" size="lg" />
+                              <div>
+                                <small className="text-muted d-block">Budget</small>
+                                <strong>{project.budget ? `€${parseInt(project.budget).toLocaleString('it-IT')}` : 'Non specificato'}</strong>
+                              </div>
+                            </div>
+                          </Card.Body>
+                        </Card>
+                      </Col>
+                      <Col md={6}>
+                        <Card className="info-card h-100 border-0 shadow-sm">
+                          <Card.Body>
+                            <div className="d-flex align-items-center mb-2">
+                              <FontAwesomeIcon icon={faCalendar} className="text-primary me-2" size="lg" />
+                              <div>
+                                <small className="text-muted d-block">Data Inizio</small>
+                                <strong>{formatDate(project.startDate)}</strong>
+                              </div>
+                            </div>
+                          </Card.Body>
+                        </Card>
+                      </Col>
+                      <Col md={6}>
+                        <Card className="info-card h-100 border-0 shadow-sm">
+                          <Card.Body>
+                            <div className="d-flex align-items-center mb-2">
+                              <FontAwesomeIcon icon={faCalendar} className="text-primary me-2" size="lg" />
+                              <div>
+                                <small className="text-muted d-block">Data Fine</small>
+                                <strong>{formatDate(project.endDate)}</strong>
+                              </div>
+                            </div>
+                          </Card.Body>
+                        </Card>
+                      </Col>
+                      {project.projectType && (
+                        <Col md={6}>
+                          <Card className="info-card h-100 border-0 shadow-sm">
+                            <Card.Body>
+                              <div className="d-flex align-items-center mb-2">
+                                <FontAwesomeIcon icon={faBuilding} className="text-primary me-2" size="lg" />
+                                <div>
+                                  <small className="text-muted d-block">Tipo Progetto</small>
+                                  <strong>{project.projectType}</strong>
+                                </div>
+                              </div>
+                            </Card.Body>
+                          </Card>
+                        </Col>
+                      )}
+                      {project.projectType === 'Multiproprietà' && (
+                        <Col md={6}>
+                          <Card className="info-card h-100 border-0 shadow-sm">
+                            <Card.Body>
+                              <div className="d-flex align-items-center mb-2">
+                                <FontAwesomeIcon icon={faBuilding} className="text-primary me-2" size="lg" />
+                                <div>
+                                  <small className="text-muted d-block">Unità Abitative</small>
+                                  <strong>{project.apartments ? project.apartments.length : 0}</strong>
+                                </div>
+                              </div>
+                            </Card.Body>
+                          </Card>
+                        </Col>
+                      )}
+                    </Row>
                   </div>
                 </div>
               </Tab>
               
               <Tab eventKey="immagini" title="Galleria">
                 <div className="p-4 bg-white rounded shadow-sm">
-                  {project.images && project.images.length > 0 ? (
-                    <Row xs={1} md={2} lg={3} className="g-4">
-                      {project.images.map((image, index) => (
-                        <Col key={index}>
-                          <Card className="h-100">
-                            <Card.Img 
-                              variant="top" 
-                              src={getImageUrl(image)}
-                              onError={handleImageError}
-                              style={{ height: '200px', objectFit: 'cover' }}
-                            />
-                          </Card>
-                        </Col>
-                      ))}
-                    </Row>
-                  ) : (
-                    <p className="text-muted">Nessuna immagine disponibile</p>
-                  )}
+                  {(() => {
+                    // Raccogli tutte le immagini: progetto + appartamenti
+                    const allImages = [];
+                    
+                    // Aggiungi immagini del progetto
+                    if (project.images && project.images.length > 0) {
+                      project.images.forEach(img => {
+                        allImages.push({ ...img, type: 'project' });
+                      });
+                    }
+                    
+                    // Aggiungi immagini degli appartamenti
+                    if (project.projectType === 'Multiproprietà' && project.apartments) {
+                      project.apartments.forEach((apt, aptIndex) => {
+                        if (apt.images && apt.images.length > 0) {
+                          apt.images.forEach(img => {
+                            allImages.push({ 
+                              ...img, 
+                              type: 'apartment',
+                              apartmentTitle: apt.title,
+                              apartmentIndex: aptIndex
+                            });
+                          });
+                        }
+                      });
+                    }
+                    
+                    return allImages.length > 0 ? (
+                      <Row xs={1} md={2} lg={3} className="g-4">
+                        {allImages.map((image, index) => (
+                          <Col key={index}>
+                            <Card className="h-100 gallery-card border-0 shadow-sm">
+                              <div className="position-relative">
+                                <Card.Img 
+                                  variant="top" 
+                                  src={getImageUrl(image)}
+                                  onError={handleImageError}
+                                  style={{ height: '250px', objectFit: 'cover' }}
+                                  className="gallery-image"
+                                />
+                                <Badge 
+                                  bg={image.type === 'project' ? 'primary' : 'success'}
+                                  className="position-absolute top-0 end-0 m-2"
+                                >
+                                  {image.type === 'project' ? 'Progetto' : image.apartmentTitle}
+                                </Badge>
+                              </div>
+                              {image.description && (
+                                <Card.Body>
+                                  <Card.Text className="small text-muted mb-0">
+                                    {image.description}
+                                  </Card.Text>
+                                </Card.Body>
+                              )}
+                            </Card>
+                          </Col>
+                        ))}
+                      </Row>
+                    ) : (
+                      <p className="text-muted">Nessuna immagine disponibile</p>
+                    );
+                  })()}
                 </div>
               </Tab>
               
@@ -367,50 +536,6 @@ const ProgettoDettaglio = () => {
                 </Tab>
               )}
               
-              <Tab eventKey="dettagli" title="Info">
-                <div className="p-4 bg-white rounded shadow-sm">
-                  <Table striped bordered hover>
-                    <tbody>
-                      <tr>
-                        <td width="30%"><strong>Categoria</strong></td>
-                        <td>{project.category}</td>
-                      </tr>
-                      {project.projectType && (
-                        <tr>
-                          <td><strong>Tipo Progetto</strong></td>
-                          <td>{project.projectType}</td>
-                        </tr>
-                      )}
-                      <tr>
-                        <td><strong>Stato</strong></td>
-                        <td><Badge bg={getStatusColor(project.status)}>{project.status}</Badge></td>
-                      </tr>
-                      <tr>
-                        <td><strong>Location</strong></td>
-                        <td>{project.location || 'Non specificata'}</td>
-                      </tr>
-                      <tr>
-                        <td><strong>Data Inizio</strong></td>
-                        <td>{formatDate(project.startDate)}</td>
-                      </tr>
-                      <tr>
-                        <td><strong>Data Fine</strong></td>
-                        <td>{formatDate(project.endDate)}</td>
-                      </tr>
-                      <tr>
-                        <td><strong>Budget</strong></td>
-                        <td>{project.budget ? `€${parseInt(project.budget).toLocaleString('it-IT')}` : 'Non specificato'}</td>
-                      </tr>
-                      {project.projectType === 'Multiproprietà' && (
-                        <tr>
-                          <td><strong>Unità Abitative</strong></td>
-                          <td>{project.apartments ? project.apartments.length : 0}</td>
-                        </tr>
-                      )}
-                    </tbody>
-                  </Table>
-                </div>
-              </Tab>
             </Tabs>
           </Col>
         </Row>
@@ -420,6 +545,39 @@ const ProgettoDettaglio = () => {
         .project-detail-hero {
           position: relative;
           text-shadow: 1px 1px 3px rgba(0,0,0,0.8);
+        }
+        
+        .info-card {
+          transition: all 0.3s ease;
+          cursor: default;
+        }
+        
+        .info-card:hover {
+          transform: translateY(-3px);
+          box-shadow: 0 8px 20px rgba(0,0,0,0.12) !important;
+        }
+        
+        .description-content {
+          line-height: 1.8;
+          font-size: 1.05rem;
+        }
+        
+        .gallery-card {
+          transition: all 0.3s ease;
+          overflow: hidden;
+        }
+        
+        .gallery-card:hover {
+          transform: translateY(-5px);
+          box-shadow: 0 10px 25px rgba(0,0,0,0.15) !important;
+        }
+        
+        .gallery-image {
+          transition: transform 0.3s ease;
+        }
+        
+        .gallery-card:hover .gallery-image {
+          transform: scale(1.05);
         }
         
         .apartment-horizontal-card {

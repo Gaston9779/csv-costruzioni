@@ -225,6 +225,15 @@ const ApartmentForm = ({ apartment, onChange, onRemove, onRemoveImage }) => {
     if (e.target.files && e.target.files.length > 0) {
       const files = Array.from(e.target.files);
       
+      // Validazione dimensione file (max 10MB)
+      const maxSize = 10 * 1024 * 1024;
+      const oversizedFiles = files.filter(f => f.size > maxSize);
+      
+      if (oversizedFiles.length > 0) {
+        alert(`Alcuni file superano i 10MB: ${oversizedFiles.map(f => f.name).join(', ')}`);
+        return;
+      }
+      
       // Creiamo direttamente gli oggetti newImages con i file binari effettivi
       const newImages = files.map(file => ({
         file: file, // Questo è il file binario reale
@@ -235,7 +244,7 @@ const ApartmentForm = ({ apartment, onChange, onRemove, onRemoveImage }) => {
         description: ''
       }));
       
-      console.log('File caricati:', newImages);
+      console.log(`${files.length} immagini appartamento caricate per upload`);
       
       // Aggiungiamo le nuove immagini all'array newImages dell'appartamento
       const currentNewImages = apartment.newImages || [];
@@ -266,12 +275,13 @@ const ApartmentForm = ({ apartment, onChange, onRemove, onRemoveImage }) => {
           <Form.Group className="mb-3">
             <Form.Label>Stato</Form.Label>
             <Form.Select
-              value={apartment.status || 'Disponibile'}
+              value={apartment.status || 'In corso'}
               onChange={(e) => onChange('status', e.target.value)}
             >
-              <option value="Disponibile">Disponibile</option>
-              <option value="Venduto">Venduto</option>
-              <option value="Riservato">Riservato</option>
+              <option value="In corso">In corso</option>
+              <option value="Completato">Completato</option>
+              <option value="In pausa">In pausa</option>
+              <option value="Pianificato">Pianificato</option>
             </Form.Select>
           </Form.Group>
         </Col>
@@ -351,13 +361,16 @@ const ApartmentForm = ({ apartment, onChange, onRemove, onRemoveImage }) => {
       
       {/* Sezione per il caricamento delle immagini */}
       <Form.Group className="mb-3">
-        <Form.Label>Immagini</Form.Label>
+        <Form.Label>Immagini Appartamento</Form.Label>
         <Form.Control
           type="file"
-          accept="image/*"
+          accept="image/*,.heic,.heif"
           multiple
           onChange={handleImageUpload}
         />
+        <Form.Text className="text-muted">
+          Supporta tutti i formati inclusi HEIC/HEIF da iPhone (max 10MB)
+        </Form.Text>
         
         {/* Mostra le nuove immagini caricate */}
         {apartment.newImages && apartment.newImages.length > 0 && (

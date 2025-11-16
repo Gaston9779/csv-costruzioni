@@ -41,9 +41,10 @@ const Progetti = () => {
       return `${API_URL}${image.url}`;
     }
     
-    // Se l'immagine ha un filename
+    // Se l'immagine ha un filename, determina il path corretto
     if (image.filename) {
-      return `${API_URL}/uploads/${image.filename}`;
+      const path = image.filename.startsWith('apartment') ? '/uploads/apartments/' : '/uploads/projects/';
+      return `${API_URL}${path}${image.filename}`;
     }
     
     // Se l'immagine ha solo ID (problema)

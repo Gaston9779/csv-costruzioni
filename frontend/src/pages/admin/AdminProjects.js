@@ -264,12 +264,6 @@ const AdminProjects = ({ onStatsUpdate }) => {
     setImagesToDelete([]);
     setCurrentProject(null);
     setActiveTab('info');
-
-    // Reset del file input
-    const fileInputs = document.querySelectorAll('input[type="file"]');
-    fileInputs.forEach(input => {
-      input.value = '';
-    });
   };
 
   // Gestisce l'invio del form per aggiungere/modificare un progetto
@@ -330,7 +324,7 @@ const AdminProjects = ({ onStatsUpdate }) => {
       // Gestione degli appartamenti
       if (formData.projectType === 'Multiproprietà' && formData.apartments && formData.apartments.length > 0) {
         // Fix: Correggiamo gli stati degli appartamenti
-        const validStatuses = ['In corso', 'Completato', 'In pausa', 'Pianificato'];
+        const validStatuses = ['In corso', 'Completato', 'In attesa', 'Annullato'];
         
         // Prepariamo i dati degli appartamenti senza le immagini per JSON
         const apartmentsJSON = formData.apartments.map((apt, index) => {
@@ -339,6 +333,11 @@ const AdminProjects = ({ onStatsUpdate }) => {
           
           // Correggiamo lo status se necessario
           aptData.status = validStatuses.includes(apt.status) ? apt.status : 'In corso';
+          
+          // Mantieni imagesToDelete se presente
+          if (apt.imagesToDelete && Array.isArray(apt.imagesToDelete)) {
+            aptData.imagesToDelete = apt.imagesToDelete;
+          }
           
           // Rimuoviamo i campi che non devono essere inviati come JSON
           delete aptData.newImages;
@@ -357,7 +356,7 @@ const AdminProjects = ({ onStatsUpdate }) => {
         });
         
         // Aggiungiamo i dati JSON degli appartamenti (senza immagini binarie)
-        formDataToSend.append('apartmentData', JSON.stringify(apartmentsJSON));
+        formDataToSend.append('apartments', JSON.stringify(apartmentsJSON));
         
         // Aggiungiamo le immagini degli appartamenti come file binari separati
         let apartmentImageIndex = 0;
@@ -427,14 +426,40 @@ const AdminProjects = ({ onStatsUpdate }) => {
         const data = await response.json();
 
         if (data.success) {
-          setSuccess(showAddModal ? 'Progetto aggiunto con successo!' : 'Progetto aggiornato con successo!');
+          // Messaggi dettagliati in base al tipo di operazione
+          let successMessage = '';
+          
+          if (showAddModal) {
+            successMessage = 'Progetto aggiunto con successo!';
+            if (formData.projectType === 'Multiproprietà' && formData.apartments?.length > 0) {
+              successMessage += ` ${formData.apartments.length} appartamenti creati.`;
+            }
+            if (selectedImages?.length > 0) {
+              successMessage += ` ${selectedImages.length} immagini caricate.`;
+            }
+          } else {
+            successMessage = 'Progetto aggiornato con successo!';
+            if (formData.projectType === 'Multiproprietà' && formData.apartments?.length > 0) {
+              successMessage += ` ${formData.apartments.length} appartamenti salvati.`;
+              
+              // Conta immagini degli appartamenti
+              const totalAptImages = formData.apartments.reduce((sum, apt) => 
+                sum + (apt.newImages?.length || 0), 0
+              );
+              if (totalAptImages > 0) {
+                successMessage += ` ${totalAptImages} immagini appartamenti caricate.`;
+              }
+            }
+          }
+          
+          setSuccess(successMessage);
           fetchProjects();
           if (onStatsUpdate) onStatsUpdate();
 
           // Se siamo in modalità aggiunta, resettiamo il form
           if (showAddModal) {
             resetForm();
-            setShowAddModal(false); // Chiudi il modal dopo il salvataggio
+            setShowAddModal(false);
             setSelectedImages([]);
             setUploadedImages([]);
             setImagesToDelete([]);
@@ -445,19 +470,24 @@ const AdminProjects = ({ onStatsUpdate }) => {
             if (showEditModal) {
               setShowEditModal(false);
             }
-          }, 2000);
+          }, 3000);
         } else {
           setError(data.message || 'Errore durante il salvataggio');
+          setTimeout(() => setError(''), 5000);
         }
       } catch (error) {
         console.error('Errore durante il salvataggio:', error);
-        setError('Errore di connessione. Riprova più tardi.');
+        const errorMessage = error.message || 'Errore di connessione. Riprova più tardi.';
+        setError(`Errore: ${errorMessage}`);
+        setTimeout(() => setError(''), 5000);
       } finally {
         setLoading(false);
       }
     } catch (error) {
       console.error('Errore durante il salvataggio:', error);
-      setError('Errore di connessione. Riprova più tardi.');
+      const errorMessage = error.message || 'Errore di connessione. Riprova più tardi.';
+      setError(`Errore: ${errorMessage}`);
+      setTimeout(() => setError(''), 5000);
     } finally {
       setLoading(false);
     }
@@ -515,42 +545,8 @@ const AdminProjects = ({ onStatsUpdate }) => {
     }));
   };
 
-  // Funzione per processare immagini e correggere orientamento EXIF
-  const processImageFile = async (file) => {
-    return new Promise((resolve) => {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const img = new Image();
-        img.onload = () => {
-          // Crea canvas per ridimensionare/correggere orientamento
-          const canvas = document.createElement('canvas');
-          const ctx = canvas.getContext('2d');
-          
-          // Imposta dimensioni canvas
-          canvas.width = img.width;
-          canvas.height = img.height;
-          
-          // Disegna immagine
-          ctx.drawImage(img, 0, 0);
-          
-          // Converti canvas in blob
-          canvas.toBlob((blob) => {
-            // Crea nuovo file dal blob
-            const processedFile = new File([blob], file.name, {
-              type: file.type,
-              lastModified: Date.now()
-            });
-            resolve(processedFile);
-          }, file.type, 0.95); // Qualità 95%
-        };
-        img.src = e.target.result;
-      };
-      reader.readAsDataURL(file);
-    });
-  };
-
   // Gestisce la selezione delle immagini
-  const handleImageSelection = async (e) => {
+  const handleImageSelection = (e) => {
     if (e.target.files && e.target.files.length > 0) {
       const files = Array.from(e.target.files);
       
@@ -560,42 +556,16 @@ const AdminProjects = ({ onStatsUpdate }) => {
       
       if (oversizedFiles.length > 0) {
         setError(`Alcuni file superano i 10MB: ${oversizedFiles.map(f => f.name).join(', ')}`);
+        setTimeout(() => setError(''), 5000);
         return;
       }
       
-      // Separa file HEIC/HEIF da altri formati
-      const heicFiles = files.filter(f => 
-        f.type === 'image/heic' || 
-        f.type === 'image/heif' || 
-        f.name.toLowerCase().endsWith('.heic') || 
-        f.name.toLowerCase().endsWith('.heif')
-      );
+      // Invia tutti i file direttamente al server senza processamento
+      // Il backend gestirà HEIC e altri formati
+      setSelectedImages(files);
+      setError('');
       
-      const standardFiles = files.filter(f => 
-        !heicFiles.includes(f)
-      );
-      
-      try {
-        // Processa file standard (JPG, PNG, etc.)
-        const processedStandard = await Promise.all(
-          standardFiles.map(file => processImageFile(file))
-        );
-        
-        // Per HEIC, li inviamo direttamente al server che li convertirà
-        // Il server deve avere una libreria di conversione HEIC
-        const allFiles = [...processedStandard, ...heicFiles];
-        
-        if (heicFiles.length > 0) {
-          setSuccess(`${heicFiles.length} file HEIC/HEIF verranno convertiti dal server durante il caricamento`);
-          setTimeout(() => setSuccess(''), 3000);
-        }
-        
-        setSelectedImages(allFiles);
-        setError('');
-      } catch (err) {
-        console.error('Errore processamento immagini:', err);
-        setError('Errore nel processamento delle immagini. Riprova.');
-      }
+      console.log(`${files.length} immagini selezionate per l'upload`);
     }
   };
 
@@ -708,8 +678,10 @@ const AdminProjects = ({ onStatsUpdate }) => {
       onHide={() => {
         setShowAddModal(false);
         setShowEditModal(false);
-        setCurrentProject(null);
-        resetForm();
+        setTimeout(() => {
+          setCurrentProject(null);
+          resetForm();
+        }, 100);
       }}
       size="lg"
       centered
@@ -878,7 +850,6 @@ const AdminProjects = ({ onStatsUpdate }) => {
                   type="file"
                   multiple
                   accept="image/*,.heic,.heif"
-                  capture="environment"
                   onChange={handleImageSelection}
                   className="mb-2"
                 />
@@ -1128,7 +1099,7 @@ const AdminProjects = ({ onStatsUpdate }) => {
       show={true}
       onHide={() => {
         setShowViewModal(false);
-        setCurrentProject(null);
+        setTimeout(() => setCurrentProject(null), 100);
       }}
       size="lg"
     >
@@ -1329,7 +1300,7 @@ const AdminProjects = ({ onStatsUpdate }) => {
           variant="primary"
           onClick={() => {
             setShowViewModal(false);
-            setCurrentProject(null);
+            setTimeout(() => setCurrentProject(null), 100);
           }}
         >
           Chiudi
@@ -1438,7 +1409,7 @@ const AdminProjects = ({ onStatsUpdate }) => {
           show={true}
           onHide={() => {
             setShowDeleteModal(false);
-            setCurrentProject(null);
+            setTimeout(() => setCurrentProject(null), 100);
           }}
           centered
         >
@@ -1449,13 +1420,13 @@ const AdminProjects = ({ onStatsUpdate }) => {
             {error && <Alert variant="danger">{error}</Alert>}
             {success && <Alert variant="success">{success}</Alert>}
 
-            <p>Sei sicuro di voler eliminare il progetto <strong>{currentProject.title}</strong>?</p>
+            <p>Sei sicuro di voler eliminare il progetto <strong>{currentProject?.title || 'questo progetto'}</strong>?</p>
             <p className="text-danger">Questa azione non può essere annullata.</p>
           </Modal.Body>
           <Modal.Footer>
             <Button variant="secondary" onClick={() => {
               setShowDeleteModal(false);
-              setCurrentProject(null);
+              setTimeout(() => setCurrentProject(null), 100);
             }}>
               Annulla
             </Button>

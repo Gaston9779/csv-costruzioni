@@ -115,8 +115,8 @@ const Home = () => {
       {/* Hero Section - Redesigned */}
       <section className="hero-section">
         <div className="hero-overlay"></div>
-        <Container fluid className="hero-container">
-          <Row style={{paddingLeft:50, paddingRight:50, paddingTop:50}} className="align-items-center">
+        <Container className="hero-container">
+          <Row className="align-items-center">
             <Col lg={6} className="hero-content">
               <div className="animate-on-scroll">
                 <h1>Costruiamo il Futuro</h1>
@@ -124,7 +124,7 @@ const Home = () => {
                   Da oltre 30 anni realizziamo progetti edilizi di qualità, combinando innovazione, sostenibilità e attenzione ai dettagli.
                 </p>
                 <div className="hero-buttons">
-                  <Button as={Link} to="/progetti" variant="primary" size="lg" className="me-3">
+                  <Button as={Link} to="/progetti" variant="primary" size="lg">
                     I Nostri Progetti
                   </Button>
                   <Button as={Link} to="/contatti" variant="outline-light" size="lg">
@@ -164,7 +164,7 @@ const Home = () => {
               <div className="feature-icon">
                 <FontAwesomeIcon icon={faCheckCircle} />
               </div>
-              <h3>100%</h3>
+              <h3>+300</h3>
               <p>Clienti Soddisfatti</p>
             </Col>
             <Col md={3} className="feature-item animate-on-scroll">
@@ -263,7 +263,7 @@ const Home = () => {
                       {project.images && project.images.length > 0 ? (
                         <Card.Img 
                           variant="top" 
-                          src={`${API_URL}/uploads/${project.images[0].filename}`} 
+                          src={`${API_URL}${project.images[0].url}`} 
                           alt={project.title} 
                           onError={(e) => {
                             e.target.onerror = null; 
@@ -316,32 +316,7 @@ const Home = () => {
       </section>
 
       {/* Testimonials Section */}
-      <section className="testimonials-section">
-        <Container>
-          <div className="section-header">
-            <h2>Cosa Dicono i Nostri Clienti</h2>
-            <p>Le testimonianze di chi ha scelto CSV per i propri progetti</p>
-          </div>
-          <Row>
-            {testimonials.map(testimonial => (
-              <Col md={4} key={testimonial.id} className="mb-4">
-                <div className="testimonial-card animate-on-scroll">
-                  <div className="testimonial-content">
-                    <p>"{testimonial.text}"</p>
-                  </div>
-                  <div className="testimonial-author">
-                    <img src={testimonial.image} alt={testimonial.name} className="testimonial-avatar" />
-                    <div className="testimonial-info">
-                      <h4>{testimonial.name}</h4>
-                      <p>{testimonial.position}</p>
-                    </div>
-                  </div>
-                </div>
-              </Col>
-            ))}
-          </Row>
-        </Container>
-      </section>
+     
 
       {/* CTA Section */}
       <section className="cta-section">

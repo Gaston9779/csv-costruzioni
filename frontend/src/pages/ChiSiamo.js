@@ -142,7 +142,6 @@ const ChiSiamo = () => {
         <Container>
           <div className="section-header">
             <h2>I Nostri Valori</h2>
-            <p>Principi che guidano ogni nostro progetto</p>
           </div>
           <Row>
             {valoriAziendali.map(valore => (
@@ -249,42 +248,7 @@ const ChiSiamo = () => {
         </Container>
       </section>
 
-      {/* Team Section */}
-      <section className="team-section">
-        <Container>
-          <div className="section-header">
-            <h2>Il Nostro Team</h2>
-            <p>Professionisti qualificati che rendono possibile ogni progetto</p>
-          </div>
-          <Row>
-            {teamMembers.map(member => (
-              <Col md={6} lg={3} key={member.id} className="mb-4">
-                <div className="team-card">
-                  <div className="team-image">
-                    <img src={member.image} alt={member.name} className="img-fluid" />
-                    <div className="team-social">
-                      <a href={member.social.facebook} target="_blank" rel="noopener noreferrer">
-                        <FontAwesomeIcon icon={['fab', 'facebook-f']} />
-                      </a>
-                      <a href={member.social.twitter} target="_blank" rel="noopener noreferrer">
-                        <FontAwesomeIcon icon={['fab', 'twitter']} />
-                      </a>
-                      <a href={member.social.linkedin} target="_blank" rel="noopener noreferrer">
-                        <FontAwesomeIcon icon={['fab', 'linkedin-in']} />
-                      </a>
-                    </div>
-                  </div>
-                  <div className="team-info">
-                    <h4>{member.name}</h4>
-                    <p>{member.position}</p>
-                  </div>
-                </div>
-              </Col>
-            ))}
-          </Row>
-        </Container>
-      </section>
-
+     
       {/* CTA Section */}
       <section className="cta-section">
         <Container>
