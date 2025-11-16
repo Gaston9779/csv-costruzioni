@@ -611,17 +611,9 @@ module.exports.createProject = async (req, res, next) => {
     // NON usare busboy che bypassa Cloudinary
     
     console.log('Files ricevuti:', req.files ? req.files.length : 'nessun file');
-    console.log('Body:', Object.keys(req.body));
-    
-    // Verifica i files ricevuti per gli appartamenti
-    if (req.files && req.files.length > 0) {
-      const apartmentImageFiles = req.files.filter(file => file.fieldname === 'apartment_images');
-      console.log('Immagini appartamento trovate:', apartmentImageFiles.map(f => f.fieldname));
-    }
-
-    // Log completo di tutto il body e file
-    console.log('BODY COMPLETO RICEVUTO:', req.body);
-    console.log('FILES:', req.files ? req.files.map(f => f.fieldname) : 'nessuno');
+    console.log('Body keys:', Object.keys(req.body));
+    console.log('Body values:', req.body);
+    console.log('Title from body:', req.body.title, 'Type:', typeof req.body.title);
 
     const { 
       title, 
