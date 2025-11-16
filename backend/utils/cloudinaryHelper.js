@@ -8,15 +8,28 @@ const cloudinary = require('../config/cloudinary');
 const formatCloudinaryImages = (files) => {
   if (!files || files.length === 0) return [];
   
-  return files.map(file => ({
-    filename: file.filename, // public_id di Cloudinary
-    path: file.path, // URL completo di Cloudinary
-    originalName: file.originalname,
-    mimetype: file.mimetype,
-    size: file.size,
-    url: file.path, // URL pubblico di Cloudinary
-    cloudinaryId: file.filename // Per future eliminazioni
-  }));
+  return files.map(file => {
+    // Log per debug
+    console.log('📸 File Cloudinary ricevuto:', {
+      filename: file.filename,
+      path: file.path,
+      url: file.url,
+      secure_url: file.secure_url
+    });
+    
+    // Cloudinary restituisce secure_url come URL pubblico
+    const imageUrl = file.secure_url || file.url || file.path;
+    
+    return {
+      filename: file.filename, // public_id di Cloudinary
+      path: imageUrl, // URL completo di Cloudinary
+      originalName: file.originalname,
+      mimetype: file.mimetype,
+      size: file.size,
+      url: imageUrl, // URL pubblico di Cloudinary
+      cloudinaryId: file.filename // Per future eliminazioni
+    };
+  });
 };
 
 /**
