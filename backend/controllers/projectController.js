@@ -6,7 +6,6 @@ const path = require('path');
 const fs = require('fs');
 const Project = require('../models/Project');
 const Client = require('../models/Client');
-const { formatCloudinaryImages, deleteCloudinaryImage, deleteMultipleCloudinaryImages } = require('../utils/cloudinaryHelper');
 
 // Configurazione multer per upload immagini progetti e appartamenti
 const storage = multer.diskStorage({
@@ -607,13 +606,13 @@ module.exports.createProject = async (req, res, next) => {
   try {
     console.log('Inizio createProject');
     
-    // Il middleware Cloudinary ha già processato i file in req.files
-    // NON usare busboy che bypassa Cloudinary
+    // Se è una richiesta multipart, gestiscila manualmente
+    if (req.headers['content-type'] && req.headers['content-type'].includes('multipart/form-data')) {
+      return handleMultipartProjectCreation(req, res);
+    }
     
     console.log('Files ricevuti:', req.files ? req.files.length : 'nessun file');
-    console.log('Body keys:', Object.keys(req.body));
-    console.log('Body values:', req.body);
-    console.log('Title from body:', req.body.title, 'Type:', typeof req.body.title);
+    console.log('Body:', Object.keys(req.body));
 
     const { 
       title, 
@@ -643,11 +642,21 @@ module.exports.createProject = async (req, res, next) => {
       });
     }
 
-    // Gestione immagini del progetto principale (Cloudinary)
-    const projectImages = req.files ? req.files.filter(file => file.fieldname === 'images') : [];
-    const images = formatCloudinaryImages(projectImages);
-    
-    console.log('Immagini progetto formattate:', images.length);
+    // Gestione immagini del progetto principale
+    const images = [];
+    if (req.files && req.files.length > 0) {
+      const projectImages = req.files.filter(file => file.fieldname === 'images');
+      
+      projectImages.forEach(file => {
+        images.push({
+          filename: file.filename,
+          path: file.path,
+          size: file.size,
+          mimetype: file.mimetype,
+          url: `/uploads/projects/${file.filename}`
+        });
+      });
+    }
 
     // Crea il progetto base
     const projectData = {
@@ -871,8 +880,10 @@ module.exports.updateProject = async (req, res) => {
   try {
     console.log('Inizio updateProject');
     
-    // Il middleware Cloudinary ha già processato i file in req.files
-    // NON usare busboy che bypassa Cloudinary
+    // Se è una richiesta multipart, gestiscila manualmente
+    if (req.headers['content-type'] && req.headers['content-type'].includes('multipart/form-data')) {
+      return handleMultipartProjectUpdate(req, res);
+    }
     
     console.log('Body ricevuto per update:', Object.keys(req.body));
     console.log('Files ricevuti per update:', req.files ? req.files.length : 'nessun file');
