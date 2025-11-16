@@ -914,7 +914,7 @@ const AdminProjects = ({ onStatsUpdate }) => {
                       <Col key={index} xs={6} md={4} lg={3} className="mb-3">
                         <div className="image-preview-container">
                           <img
-                            src={`${API_URL}${image.url}`}
+                            src={image.url?.startsWith('http') ? image.url : `${API_URL}${image.url}`}
                             alt={`Immagine ${index + 1}`}
                             className="img-thumbnail"
                           />
@@ -1197,7 +1197,7 @@ const AdminProjects = ({ onStatsUpdate }) => {
                         <Card>
                           <Card.Img
                             variant="top"
-                            src={`${API_URL}${image.url}`}
+                            src={image.url?.startsWith('http') ? image.url : `${API_URL}${image.url}`}
                             alt={`Immagine ${index + 1}`}
                           />
                         </Card>
@@ -1272,7 +1272,7 @@ const AdminProjects = ({ onStatsUpdate }) => {
                                     <Card>
                                       <Card.Img
                                         variant="top"
-                                        src={`${API_URL}${img.url}`}
+                                        src={img.url?.startsWith('http') ? img.url : `${API_URL}${img.url}`}
                                         alt={`Immagine ${imgIndex + 1}`}
                                       />
                                     </Card>

@@ -427,7 +427,7 @@ const ApartmentForm = ({ apartment, onChange, onRemove, onRemoveImage }) => {
                 <Col key={`existing_${idx}`} xs={6} md={4} lg={3} className="mb-3">
                   <div className="image-preview-container">
                     <img 
-                      src={`${API_URL}${image.url}`} 
+                      src={image.url?.startsWith('http') ? image.url : `${API_URL}${image.url}`} 
                       alt={`Immagine ${idx + 1}`}
                       className="img-thumbnail"
                     />
