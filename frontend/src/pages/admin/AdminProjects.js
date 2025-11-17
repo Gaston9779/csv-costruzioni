@@ -578,12 +578,22 @@ const AdminProjects = ({ onStatsUpdate }) => {
 
   // Funzione per eliminare un'immagine esistente quando si modifica un progetto
   const handleDeleteExistingImage = (imageId) => {
+    console.log('Eliminazione immagine con ID:', imageId);
+    
+    if (!imageId) {
+      console.error('ID immagine non valido');
+      return;
+    }
+    
     // Segna l'immagine per la rimozione
     setImagesToDelete([...imagesToDelete, imageId]);
 
     // Aggiorna l'anteprima rimuovendo l'immagine
     if (currentProject && currentProject.images) {
-      const updatedImages = currentProject.images.filter(img => img._id !== imageId);
+      const updatedImages = currentProject.images.filter(img => {
+        const imgId = img._id || img.id;
+        return imgId !== imageId;
+      });
       setCurrentProject({
         ...currentProject,
         images: updatedImages
@@ -922,7 +932,7 @@ const AdminProjects = ({ onStatsUpdate }) => {
                             variant="danger"
                             size="sm"
                             className="remove-image-btn"
-                            onClick={() => handleDeleteExistingImage(image._id)}
+                            onClick={() => handleDeleteExistingImage(image._id || image.id)}
                           >
                             <FontAwesomeIcon icon={faTrash} />
                           </Button>
