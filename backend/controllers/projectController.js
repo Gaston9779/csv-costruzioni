@@ -627,6 +627,7 @@ module.exports.createProject = async (req, res, next) => {
     console.log('Files ricevuti:', req.files ? req.files.length : 'nessun file');
     console.log('Body keys:', Object.keys(req.body));
     console.log('Body completo:', JSON.stringify(req.body, null, 2));
+    console.log('req.user:', req.user);
     
     // Log file paths per debug
     if (req.files && req.files.length > 0) {
@@ -636,6 +637,14 @@ module.exports.createProject = async (req, res, next) => {
       });
     }
     console.log('==========================================\n');
+    
+    // Verifica autenticazione
+    if (!req.user) {
+      return res.status(401).json({
+        success: false,
+        message: 'Utente non autenticato'
+      });
+    }
 
     const { 
       title, 
@@ -696,7 +705,7 @@ module.exports.createProject = async (req, res, next) => {
       visible: visible === 'true',
       featured: featured === 'true',
       images,
-      createdBy: req.user.id
+      createdBy: req.user?.id || req.user?._id
     };
 
     // Gestione degli appartamenti per progetti multiproprietà
