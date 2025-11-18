@@ -622,16 +622,20 @@ module.exports.errorHandler = (err, req, res, next) => {
 // Crea nuovo progetto (solo admin)
 module.exports.createProject = async (req, res, next) => {
   try {
-    console.log('✅ createProject - middleware Cloudinary ha già processato i file');
+    console.log('\n========== CREATE PROJECT DEBUG ==========');
+    console.log('Headers:', req.headers['content-type']);
     console.log('Files ricevuti:', req.files ? req.files.length : 'nessun file');
-    console.log('Body:', Object.keys(req.body));
+    console.log('Body keys:', Object.keys(req.body));
+    console.log('Body completo:', JSON.stringify(req.body, null, 2));
     
     // Log file paths per debug
     if (req.files && req.files.length > 0) {
       req.files.forEach(f => {
-        console.log(`File: ${f.fieldname} -> ${f.path.substring(0, 50)}... (Cloudinary: ${f.path?.startsWith('http')})`);
+        console.log(`File: ${f.fieldname} -> path: ${f.path?.substring(0, 60)}`);
+        console.log(`  Cloudinary: ${f.path?.startsWith('http')}`);
       });
     }
+    console.log('==========================================\n');
 
     const { 
       title, 
