@@ -622,15 +622,16 @@ module.exports.errorHandler = (err, req, res, next) => {
 // Crea nuovo progetto (solo admin)
 module.exports.createProject = async (req, res, next) => {
   try {
-    console.log('Inizio createProject');
-    
-    // Se è una richiesta multipart, gestiscila manualmente
-    if (req.headers['content-type'] && req.headers['content-type'].includes('multipart/form-data')) {
-      return handleMultipartProjectCreation(req, res);
-    }
-    
+    console.log('✅ createProject - middleware Cloudinary ha già processato i file');
     console.log('Files ricevuti:', req.files ? req.files.length : 'nessun file');
     console.log('Body:', Object.keys(req.body));
+    
+    // Log file paths per debug
+    if (req.files && req.files.length > 0) {
+      req.files.forEach(f => {
+        console.log(`File: ${f.fieldname} -> ${f.path.substring(0, 50)}... (Cloudinary: ${f.path?.startsWith('http')})`);
+      });
+    }
 
     const { 
       title, 
@@ -895,13 +896,7 @@ module.exports.createProject = async (req, res, next) => {
 // Aggiorna progetto esistente (solo admin)
 module.exports.updateProject = async (req, res) => {
   try {
-    console.log('Inizio updateProject');
-    
-    // Se è una richiesta multipart, gestiscila manualmente
-    if (req.headers['content-type'] && req.headers['content-type'].includes('multipart/form-data')) {
-      return handleMultipartProjectUpdate(req, res);
-    }
-    
+    console.log('✅ updateProject - middleware Cloudinary ha già processato i file');
     console.log('Body ricevuto per update:', Object.keys(req.body));
     console.log('Files ricevuti per update:', req.files ? req.files.length : 'nessun file');
     if (req.files && req.files.length > 0) {
