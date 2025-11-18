@@ -7,11 +7,11 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET
 });
 
-// Log configurazione per debug
-console.log('🔧 Cloudinary Config:', {
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME ? '✅ SET' : '❌ MISSING',
-  api_key: process.env.CLOUDINARY_API_KEY ? '✅ SET' : '❌ MISSING',
-  api_secret: process.env.CLOUDINARY_API_SECRET ? '✅ SET' : '❌ MISSING'
-});
+// Verifica configurazione
+if (!process.env.CLOUDINARY_CLOUD_NAME || !process.env.CLOUDINARY_API_KEY || !process.env.CLOUDINARY_API_SECRET) {
+  console.error('⚠️ ATTENZIONE: Credenziali Cloudinary mancanti. Le immagini verranno salvate localmente (non persistente su Render).');
+} else {
+  console.log('✅ Cloudinary configurato correttamente');
+}
 
 module.exports = cloudinary;

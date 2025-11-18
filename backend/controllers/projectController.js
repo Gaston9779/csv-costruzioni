@@ -7,6 +7,16 @@ const fs = require('fs');
 const Project = require('../models/Project');
 const Client = require('../models/Client');
 
+// Helper per formattare immagini (supporta sia locale che Cloudinary)
+const formatImageUrl = (file, type = 'projects') => {
+  // Se il path inizia con http, è un URL Cloudinary completo
+  if (file.path && file.path.startsWith('http')) {
+    return file.path;
+  }
+  // Altrimenti usa il path locale
+  return `/uploads/${type}/${file.filename}`;
+};
+
 // Configurazione multer per upload immagini progetti e appartamenti
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
@@ -246,7 +256,7 @@ const createProjectLogic = async (req, res) => {
           path: file.path,
           size: file.size,
           mimetype: file.mimetype,
-          url: `/uploads/projects/${file.filename}`
+          url: formatImageUrl(file, 'projects')
         });
       });
     }
@@ -661,7 +671,7 @@ module.exports.createProject = async (req, res, next) => {
           path: file.path,
           size: file.size,
           mimetype: file.mimetype,
-          url: `/uploads/projects/${file.filename}`
+          url: formatImageUrl(file, 'projects')
         });
       });
     }
@@ -752,7 +762,7 @@ module.exports.createProject = async (req, res, next) => {
               
               apartment.images.push({
                 filename: file.filename,
-                url: `/uploads/apartments/${file.filename}`,
+                url: formatImageUrl(file, 'apartments'),
                 path: file.path,
                 originalName: file.originalname,
                 size: file.size,
@@ -974,13 +984,18 @@ module.exports.updateProject = async (req, res) => {
     if (req.files && req.files.length > 0) {
       const projectImages = req.files.filter(file => file.fieldname === 'images');
       if (projectImages.length > 0) {
-        const newImages = projectImages.map(file => ({
-          filename: file.filename,
-          path: file.path,
-          size: file.size,
-          mimetype: file.mimetype,
-          url: `/uploads/projects/${file.filename}`
-        }));
+        const newImages = projectImages.map(file => {
+          // Se il file ha un URL Cloudinary (path inizia con http), usalo
+          const imageUrl = file.path && file.path.startsWith('http') ? file.path : `/uploads/projects/${file.filename}`;
+          
+          return {
+            filename: file.filename,
+            path: file.path,
+            size: file.size,
+            mimetype: file.mimetype,
+            url: imageUrl
+          };
+        });
 
         // Aggiungi alle immagini esistenti o sostituisci
         if (replaceImages === 'true') {
@@ -1878,7 +1893,7 @@ module.exports.addApartmentImages = async (req, res) => {
       path: file.path,
       size: file.size,
       mimetype: file.mimetype,
-      url: `/uploads/apartments/${file.filename}`
+      url: formatImageUrl(file, 'apartments')
     }));
     
     // Aggiungi le immagini all'appartamento
