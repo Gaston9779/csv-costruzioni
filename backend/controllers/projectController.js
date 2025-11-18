@@ -622,29 +622,15 @@ module.exports.errorHandler = (err, req, res, next) => {
 // Crea nuovo progetto (solo admin)
 module.exports.createProject = async (req, res, next) => {
   try {
-    console.log('\n========== CREATE PROJECT DEBUG ==========');
-    console.log('Headers:', req.headers['content-type']);
+    console.log('Inizio createProject');
+    
+    // Se è una richiesta multipart, gestiscila manualmente
+    if (req.headers['content-type'] && req.headers['content-type'].includes('multipart/form-data')) {
+      return handleMultipartProjectCreation(req, res);
+    }
+    
     console.log('Files ricevuti:', req.files ? req.files.length : 'nessun file');
-    console.log('Body keys:', Object.keys(req.body));
-    console.log('Body completo:', JSON.stringify(req.body, null, 2));
-    console.log('req.user:', req.user);
-    
-    // Log file paths per debug
-    if (req.files && req.files.length > 0) {
-      req.files.forEach(f => {
-        console.log(`File: ${f.fieldname} -> path: ${f.path?.substring(0, 60)}`);
-        console.log(`  Cloudinary: ${f.path?.startsWith('http')}`);
-      });
-    }
-    console.log('==========================================\n');
-    
-    // Verifica autenticazione
-    if (!req.user) {
-      return res.status(401).json({
-        success: false,
-        message: 'Utente non autenticato'
-      });
-    }
+    console.log('Body:', Object.keys(req.body));
 
     const { 
       title, 
@@ -705,7 +691,7 @@ module.exports.createProject = async (req, res, next) => {
       visible: visible === 'true',
       featured: featured === 'true',
       images,
-      createdBy: req.user?.id || req.user?._id
+      createdBy: req.user.id
     };
 
     // Gestione degli appartamenti per progetti multiproprietà

@@ -67,28 +67,11 @@ app.options('*', cors(corsOptions));
 app.use((req, res, next) => {
   console.log(`${new Date().toISOString()} - ${req.method} ${req.path}`);
   console.log('Origin:', req.get('Origin'));
-  console.log('Content-Type:', req.get('Content-Type'));
   next();
 });
 
-// Body parser - NON applicare a multipart/form-data (gestito da multer)
-app.use((req, res, next) => {
-  const contentType = req.get('Content-Type') || '';
-  if (!contentType.includes('multipart/form-data')) {
-    express.json({ limit: '50mb' })(req, res, next);
-  } else {
-    next();
-  }
-});
-
-app.use((req, res, next) => {
-  const contentType = req.get('Content-Type') || '';
-  if (!contentType.includes('multipart/form-data')) {
-    express.urlencoded({ extended: true, limit: '50mb' })(req, res, next);
-  } else {
-    next();
-  }
-});
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
 // API routes
 app.use('/api/auth', authRoutes);
