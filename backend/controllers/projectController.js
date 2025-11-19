@@ -85,15 +85,20 @@ const upload = multer({
 // Gestione multipart manuale per evitare errori multer
 const handleMultipartProjectCreation = async (req, res) => {
   try {
+    console.log('========== BUSBOY START ==========');
+    console.log('Content-Type:', req.headers['content-type']);
+    
     const bb = busboy({ headers: req.headers });
     const fields = {};
     const files = [];
     
     bb.on('field', (fieldname, val) => {
+      console.log(`Field ricevuto: ${fieldname} = ${val?.substring(0, 50)}...`);
       fields[fieldname] = val;
     });
     
     bb.on('file', (fieldname, file, info) => {
+      console.log(`File ricevuto: ${fieldname} - ${info.filename}`);
       const { filename, encoding, mimeType } = info;
       const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
       const extension = path.extname(filename);
@@ -124,21 +129,37 @@ const handleMultipartProjectCreation = async (req, res) => {
         mimetype: mimeType,
         size: 0 // Sarà aggiornato quando il file è completamente scritto
       });
+      
+      console.log(`File salvato temporaneamente: ${filePath}`);
     });
     
     bb.on('finish', async () => {
-      // Upload file su Cloudinary
-      console.log(`📤 Caricamento ${files.length} file su Cloudinary...`);
+      console.log('========== BUSBOY FINISH ==========');
+      console.log('Files ricevuti da busboy:', files.length);
+      console.log('Fields ricevuti:', Object.keys(fields));
       
-      for (const file of files) {
-        const folder = file.fieldname === 'apartmentImages' 
-          ? 'csv-costruzioni/apartments' 
-          : 'csv-costruzioni/projects';
+      // Upload file su Cloudinary
+      if (files.length > 0) {
+        console.log(`📤 Caricamento ${files.length} file su Cloudinary...`);
         
-        // Upload e sostituisci path locale con URL Cloudinary
-        const cloudinaryUrl = await uploadToCloudinary(file.path, folder);
-        file.path = cloudinaryUrl;
+        for (const file of files) {
+          console.log(`File da caricare: ${file.fieldname} - ${file.originalname}`);
+          console.log(`Path locale: ${file.path}`);
+          
+          const folder = file.fieldname === 'apartmentImages' 
+            ? 'csv-costruzioni/apartments' 
+            : 'csv-costruzioni/projects';
+          
+          // Upload e sostituisci path locale con URL Cloudinary
+          const cloudinaryUrl = await uploadToCloudinary(file.path, folder);
+          console.log(`URL finale: ${cloudinaryUrl}`);
+          file.path = cloudinaryUrl;
+        }
+      } else {
+        console.log('⚠️ NESSUN FILE ricevuto da busboy!');
       }
+      
+      console.log('===================================');
       
       // Simula req.body e req.files per compatibilità
       req.body = fields;
