@@ -79,6 +79,11 @@ const ProgettoDettaglio = () => {
     
     // Se è un oggetto con url
     if (image.url) {
+      // Se è già un URL completo (Cloudinary), usalo direttamente
+      if (image.url.startsWith('http')) {
+        return image.url;
+      }
+      // Altrimenti aggiungi API_URL (vecchie immagini locali)
       return `${API_URL}${image.url}`;
     }
     
