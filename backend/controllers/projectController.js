@@ -1892,6 +1892,8 @@ module.exports.addApartmentImages = async (req, res) => {
     const { projectId, apartmentId } = req.params;
     const files = req.files;
     
+    console.log(`📤 addApartmentImages: ${files?.length || 0} file ricevuti`);
+    
     // Verifica se ci sono file
     if (!files || files.length === 0) {
       return res.status(400).json({
@@ -1900,12 +1902,18 @@ module.exports.addApartmentImages = async (req, res) => {
       });
     }
     
+    // Upload file su Cloudinary
+    console.log(`📤 Caricamento ${files.length} immagini appartamento su Cloudinary...`);
+    for (const file of files) {
+      console.log(`File appartamento: ${file.originalname} - path locale: ${file.path}`);
+      const cloudinaryUrl = await uploadToCloudinary(file.path, 'csv-costruzioni/apartments');
+      console.log(`✅ URL Cloudinary: ${cloudinaryUrl}`);
+      file.path = cloudinaryUrl;
+    }
+    
     // Trova il progetto
     const project = await Project.findById(projectId);
     if (!project) {
-      // Elimina da Cloudinary se il progetto non esiste
-      const publicIds = files.map(f => f.filename);
-      await deleteMultipleCloudinaryImages(publicIds);
       return res.status(404).json({
         success: false,
         message: 'Progetto non trovato'
@@ -1915,9 +1923,6 @@ module.exports.addApartmentImages = async (req, res) => {
     // Trova l'appartamento
     const apartmentIndex = project.apartments.findIndex(apt => apt._id.toString() === apartmentId);
     if (apartmentIndex === -1) {
-      // Elimina da Cloudinary se l'appartamento non esiste
-      const publicIds = files.map(f => f.filename);
-      await deleteMultipleCloudinaryImages(publicIds);
       return res.status(404).json({
         success: false,
         message: 'Appartamento non trovato'
@@ -1929,13 +1934,13 @@ module.exports.addApartmentImages = async (req, res) => {
       project.apartments[apartmentIndex].images = [];
     }
     
-    // Formatta le immagini
+    // Formatta le immagini (ora con URL Cloudinary)
     const formattedImages = files.map(file => ({
       filename: file.filename,
       path: file.path,
       size: file.size,
       mimetype: file.mimetype,
-      url: formatImageUrl(file, 'apartments')
+      url: file.path // Ora è già l'URL Cloudinary
     }));
     
     // Aggiungi le immagini all'appartamento
