@@ -235,7 +235,6 @@ const Home = () => {
         <Container>
           <div className="section-header">
             <h2>Progetti in Evidenza</h2>
-            <p>I nostri lavori più recenti e significativi</p>
           </div>
           <Row>
             {loading ? (
