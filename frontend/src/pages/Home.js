@@ -145,29 +145,29 @@ const Home = () => {
       {/* Features Section - New */}
       <section className="features-section">
         <Container>
-          <Row>
-            <Col md={3} className="feature-item animate-on-scroll">
+          <Row className="justify-content-center">
+            <Col xs={6} md={3} className="feature-item animate-on-scroll">
               <div className="feature-icon">
                 <FontAwesomeIcon icon={faCheckCircle} />
               </div>
               <h3>30+</h3>
               <p>Anni di Esperienza</p>
             </Col>
-            <Col md={3} className="feature-item animate-on-scroll">
+            <Col xs={6} md={3} className="feature-item animate-on-scroll">
               <div className="feature-icon">
                 <FontAwesomeIcon icon={faCheckCircle} />
               </div>
               <h3>250+</h3>
               <p>Progetti Completati</p>
             </Col>
-            <Col md={3} className="feature-item animate-on-scroll">
+            <Col xs={6} md={3} className="feature-item animate-on-scroll">
               <div className="feature-icon">
                 <FontAwesomeIcon icon={faCheckCircle} />
               </div>
               <h3>+300</h3>
               <p>Clienti Soddisfatti</p>
             </Col>
-            <Col md={3} className="feature-item animate-on-scroll">
+            <Col xs={6} md={3} className="feature-item animate-on-scroll">
               <div className="feature-icon">
                 <FontAwesomeIcon icon={faCheckCircle} />
               </div>
