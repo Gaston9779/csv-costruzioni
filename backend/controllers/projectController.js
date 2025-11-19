@@ -6,6 +6,7 @@ const path = require('path');
 const fs = require('fs');
 const Project = require('../models/Project');
 const Client = require('../models/Client');
+const { uploadToCloudinary, deleteFromCloudinary } = require('../utils/cloudinaryUpload');
 
 // Helper per formattare immagini (supporta sia locale che Cloudinary)
 const formatImageUrl = (file, type = 'projects') => {
@@ -126,6 +127,19 @@ const handleMultipartProjectCreation = async (req, res) => {
     });
     
     bb.on('finish', async () => {
+      // Upload file su Cloudinary
+      console.log(`📤 Caricamento ${files.length} file su Cloudinary...`);
+      
+      for (const file of files) {
+        const folder = file.fieldname === 'apartmentImages' 
+          ? 'csv-costruzioni/apartments' 
+          : 'csv-costruzioni/projects';
+        
+        // Upload e sostituisci path locale con URL Cloudinary
+        const cloudinaryUrl = await uploadToCloudinary(file.path, folder);
+        file.path = cloudinaryUrl;
+      }
+      
       // Simula req.body e req.files per compatibilità
       req.body = fields;
       req.files = files;
@@ -190,6 +204,19 @@ const handleMultipartProjectUpdate = async (req, res) => {
     });
     
     bb.on('finish', async () => {
+      // Upload file su Cloudinary
+      console.log(`📤 Caricamento ${files.length} file su Cloudinary...`);
+      
+      for (const file of files) {
+        const folder = file.fieldname === 'apartmentImages' 
+          ? 'csv-costruzioni/apartments' 
+          : 'csv-costruzioni/projects';
+        
+        // Upload e sostituisci path locale con URL Cloudinary
+        const cloudinaryUrl = await uploadToCloudinary(file.path, folder);
+        file.path = cloudinaryUrl;
+      }
+      
       // Simula req.body e req.files per compatibilità
       req.body = fields;
       req.files = files;
