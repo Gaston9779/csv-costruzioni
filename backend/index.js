@@ -82,6 +82,11 @@ app.use('/api/projects', projectRoutes);
 // Protected static file server for uploads
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
+// Health check endpoint (veloce, senza query DB)
+app.get('/health', (req, res) => {
+  res.status(200).json({ status: 'ok', timestamp: Date.now() });
+});
+
 // Root route
 app.get('/', (req, res) => {
   res.json({

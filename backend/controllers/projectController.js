@@ -437,6 +437,9 @@ const createProjectLogic = async (req, res) => {
 // Ottieni tutti i progetti (Direzionale - per il frontend)
 module.exports.getPublicProjects = async (req, res) => {
   try {
+    console.log('⏱️ getPublicProjects START');
+    const startTime = Date.now();
+    
     const { category, featured, limit = 10, page = 1 } = req.query;
     
     const filter = { visible: true };
@@ -449,21 +452,24 @@ module.exports.getPublicProjects = async (req, res) => {
 
     const skip = (page - 1) * limit;
     
-    const rawProjects = await Project.find(filter)
-      .populate('client', 'name')
-      .sort({ featured: -1, createdAt: -1 })
-      .limit(parseInt(limit))
-      .skip(skip);
+    // Ottimizzazione: esegui count e find in parallelo
+    const [rawProjects, total] = await Promise.all([
+      Project.find(filter)
+        .populate('client', 'name')
+        .sort({ featured: -1, createdAt: -1 })
+        .limit(parseInt(limit))
+        .skip(skip)
+        .lean(), // .lean() per performance migliori
+      Project.countDocuments(filter)
+    ]);
+    
+    console.log(`⏱️ Query MongoDB completata in ${Date.now() - startTime}ms`);
       
     // Converti e standardizza i progetti
-    const projects = rawProjects.map(doc => {
-      const plainProject = JSON.parse(JSON.stringify(doc));
-      return standardizeProjectResponse(plainProject);
-    });
+    const projects = rawProjects.map(doc => standardizeProjectResponse(doc));
     
-    console.log(`API getPublicProjects: ${projects.length} progetti normalizzati con URL immagini completi`);
-
-    const total = await Project.countDocuments(filter);
+    const duration = Date.now() - startTime;
+    console.log(`✅ getPublicProjects completato in ${duration}ms - ${projects.length} progetti`);
 
     res.json({
       success: true,
@@ -476,10 +482,11 @@ module.exports.getPublicProjects = async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('Errore nel recupero progetti pubblici:', error);
+    console.error('❌ Errore nel recupero progetti pubblici:', error);
     res.status(500).json({
       success: false,
-      message: 'Errore interno del server'
+      message: 'Errore interno del server',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
     });
   }
 };

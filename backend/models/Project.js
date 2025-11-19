@@ -140,11 +140,12 @@ projectSchema.pre('save', async function(next) {
   }
 });
 
-// Indici per migliorare le performance
+// Indici composti per migliorare le performance delle query più comuni
+projectSchema.index({ visible: 1, featured: -1, createdAt: -1 }); // Query progetti pubblici
+projectSchema.index({ visible: 1, category: 1, featured: -1 }); // Query per categoria
 projectSchema.index({ category: 1 });
 projectSchema.index({ status: 1 });
 projectSchema.index({ featured: 1 });
-projectSchema.index({ visible: 1 });
 projectSchema.index({ projectId: 1 });
 projectSchema.index({ projectType: 1 });
 
