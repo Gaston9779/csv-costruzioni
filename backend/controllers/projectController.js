@@ -1287,11 +1287,17 @@ module.exports.updateProject = async (req, res) => {
       const project = await Project.findByIdAndUpdate(
         projectId,
         updateData,
-        { new: true }
+        { 
+          new: true,
+          runValidators: true,
+          overwrite: false
+        }
       )
       .populate('client', 'name email')
       .populate('createdBy', 'name email')
       .lean(); // Manteniamo lean per ottenere un oggetto JavaScript semplice
+      
+      console.log('Progetto dopo findByIdAndUpdate:', JSON.stringify(project, null, 2));
 
     // Assicuriamoci che le immagini degli appartamenti abbiano URL completi
     if (project && project.apartments && Array.isArray(project.apartments)) {
