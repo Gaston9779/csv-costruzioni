@@ -273,7 +273,7 @@ const ServizioDettaglio = () => {
                       {project.images && project.images.length > 0 ? (
                         <Card.Img 
                           variant="top" 
-                          src={`${API_URL}${project.images[0].url}`} 
+                          src={project.images[0].url?.startsWith('http') ? project.images[0].url : `${API_URL}${project.images[0].url}`}
                           alt={project.title} 
                           onError={(e) => {
                             e.target.onerror = null;
