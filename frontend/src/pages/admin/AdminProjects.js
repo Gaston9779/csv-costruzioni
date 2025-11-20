@@ -282,25 +282,20 @@ const AdminProjects = ({ onStatsUpdate }) => {
         : `${API_URL}/api/admin/projects`;
 
       // IMPORTANTE: Prepariamo i dati del progetto
-      // Crea una copia di formData per evitare di modificare lo stato
-      const projectData = {
-        ...formData,
-        apartments: []
-      };
-
-      // Prepariamo il FormData da inviare
       const formDataToSend = new FormData();
 
       // Aggiungiamo tutte le proprietà del progetto, tranne apartments che gestiremo separatamente
       Object.keys(formData).forEach(key => {
-        if (key === 'apartments' || key === 'projectType') return;
-        if (formData[key] !== undefined && formData[key] !== null) {
+        if (key === 'apartments') return; // Gli appartamenti li gestiamo dopo
+        if (key === '_id') return; // Non inviare _id nel body
+        
+        if (formData[key] !== undefined && formData[key] !== null && formData[key] !== '') {
           formDataToSend.append(key, formData[key]);
         }
       });
 
-      // Fix per projectType
-      formDataToSend.append('projectType', typeof formData.projectType === 'string' ? formData.projectType : 'Singola');
+      console.log('FormData keys being sent:', Array.from(formDataToSend.keys()));
+      console.log('FormData values:', Object.fromEntries(formDataToSend));
 
       // Aggiungi le immagini del progetto
       if (selectedImages && selectedImages.length > 0) {
