@@ -189,6 +189,7 @@ const handleMultipartProjectUpdate = async (req, res) => {
     
     bb.on('field', (fieldname, val) => {
       fields[fieldname] = val;
+      console.log(`📝 Campo ricevuto: ${fieldname} = ${val}`);
     });
     
     bb.on('file', (fieldname, file, info) => {
@@ -225,22 +226,29 @@ const handleMultipartProjectUpdate = async (req, res) => {
     });
     
     bb.on('finish', async () => {
-      // Upload file su Cloudinary
-      console.log(`📤 Caricamento ${files.length} file su Cloudinary...`);
+      console.log('🔍 BUSBOY FINISH - Campi ricevuti:', Object.keys(fields));
+      console.log('🔍 BUSBOY FINISH - Valori campi:', fields);
       
-      for (const file of files) {
-        const folder = file.fieldname === 'apartmentImages' 
-          ? 'csv-costruzioni/apartments' 
-          : 'csv-costruzioni/projects';
+      // Upload file su Cloudinary
+      if (files.length > 0) {
+        console.log(`📤 Caricamento ${files.length} file su Cloudinary...`);
         
-        // Upload e sostituisci path locale con URL Cloudinary
-        const cloudinaryUrl = await uploadToCloudinary(file.path, folder);
-        file.path = cloudinaryUrl;
+        for (const file of files) {
+          const folder = file.fieldname === 'apartmentImages' 
+            ? 'csv-costruzioni/apartments' 
+            : 'csv-costruzioni/projects';
+          
+          // Upload e sostituisci path locale con URL Cloudinary
+          const cloudinaryUrl = await uploadToCloudinary(file.path, folder);
+          file.path = cloudinaryUrl;
+        }
       }
       
       // Simula req.body e req.files per compatibilità
       req.body = fields;
       req.files = files;
+      
+      console.log('🔍 req.body prima di chiamare updateProject:', req.body);
       
       // Chiama la logica di update esistente senza multipart
       req.headers['content-type'] = 'application/json'; // Evita loop infinito
