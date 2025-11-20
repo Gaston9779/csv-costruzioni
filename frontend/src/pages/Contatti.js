@@ -102,8 +102,8 @@ const Contatti = () => {
                   <FontAwesomeIcon icon={faPhoneAlt} />
                 </div>
                 <h3>Telefono</h3>
-                <p>Ufficio: +39 0461 246541<br />Fax: +39 0461 246541</p>
-                <a href="tel:+390461246541" className="btn btn-outline-primary btn-sm">
+                <p>Ufficio: +39 0461 1821559<br />Cellulare: +39 334 2885870</p>
+                <a href="tel:+3904611821559" className="btn btn-outline-primary btn-sm">
                   <FontAwesomeIcon icon={faPhone} className="me-2" />
                   Chiama Ora
                 </a>
@@ -116,8 +116,8 @@ const Contatti = () => {
                   <FontAwesomeIcon icon={faEnvelope} />
                 </div>
                 <h3>Email</h3>
-                <p>Info: csv@costruzioneviola.it<br />Preventivi: preventivi@costruzioneviola.it<br />Supporto: supporto@costruzioneviola.it</p>
-                <a href="mailto:csv@costruzioneviola.it" className="btn btn-outline-primary btn-sm">
+                <p>Info: csv@costruzioniviola.it<br /></p>
+                <a href="mailto:csv@costruzioniviola.it" className="btn btn-outline-primary btn-sm">
                   <FontAwesomeIcon icon={faEnvelope} className="me-2" />
                   Invia Email
                 </a>
@@ -153,7 +153,7 @@ const Contatti = () => {
                 </div>
                 <h3>Ufficio Tecnico</h3>
                 <p>Via della Zarga, 42<br />38015 Lavis, Trento<br />Italia</p>
-                <p>Tel: +39 02 9876543<br />Email: tecnico@costruzioneviola.it</p>
+                <p>Tel: +39 0461 1821559<br />Email: tecnico@costruzioniviola.it</p>
               </div>
             </Col>
 

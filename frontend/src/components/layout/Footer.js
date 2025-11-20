@@ -48,7 +48,7 @@ const Footer = () => {
               <h3>Contatti</h3>
               <p>
                 <FontAwesomeIcon icon={['fas', 'map-marker-alt']} />
-                <span>Via della Zarga 42, 3801, Lavis TN</span>
+                <span>Via della Zarga 42, 38015, Lavis TN</span>
               </p>
               <p>
                 <FontAwesomeIcon icon={['fas', 'phone']} />
