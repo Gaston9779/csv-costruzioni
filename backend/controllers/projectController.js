@@ -952,6 +952,7 @@ module.exports.updateProject = async (req, res) => {
   try {
     console.log('✅ updateProject - middleware Cloudinary ha già processato i file');
     console.log('Body ricevuto per update:', Object.keys(req.body));
+    console.log('Valori body completi:', req.body);
     console.log('Files ricevuti per update:', req.files ? req.files.length : 'nessun file');
     if (req.files && req.files.length > 0) {
       req.files.forEach(file => {
@@ -974,7 +975,9 @@ module.exports.updateProject = async (req, res) => {
       featured,
       replaceImages,
       apartments,
-      imagesToDelete
+      imagesToDelete,
+      location,
+      notes
     } = req.body;
 
     // Recupera il progetto esistente
@@ -998,9 +1001,11 @@ module.exports.updateProject = async (req, res) => {
       budget: parseFloat(budget) || 0,
       visible: visible === 'true',
       featured: featured === 'true',
-      location: req.body.location || existingProject.location,
-      notes: req.body.notes || existingProject.notes
+      location: location || existingProject.location,
+      notes: notes || existingProject.notes
     };
+    
+    console.log('UpdateData preparato:', updateData);
 
     // Gestione delle immagini da eliminare
     if (imagesToDelete) {
