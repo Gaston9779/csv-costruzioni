@@ -997,7 +997,9 @@ module.exports.updateProject = async (req, res) => {
       endDate,
       budget: parseFloat(budget) || 0,
       visible: visible === 'true',
-      featured: featured === 'true'
+      featured: featured === 'true',
+      location: req.body.location || existingProject.location,
+      notes: req.body.notes || existingProject.notes
     };
 
     // Gestione delle immagini da eliminare
