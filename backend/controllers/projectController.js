@@ -18,6 +18,24 @@ const formatImageUrl = (file, type = 'projects') => {
   return `/uploads/${type}/${file.filename}`;
 };
 
+// Entrypoint che instrada l'update in base al Content-Type
+// - multipart/form-data -> usa handleMultipartProjectUpdate (busboy)
+// - application/json    -> usa updateProject
+module.exports.updateProjectEntry = async (req, res) => {
+  try {
+    const contentType = req.headers['content-type'] || '';
+    if (contentType.includes('multipart/form-data')) {
+      // Usa il parser busboy già presente
+      return handleMultipartProjectUpdate(req, res);
+    }
+    // Default: JSON
+    return module.exports.updateProject(req, res);
+  } catch (err) {
+    console.error('Errore in updateProjectEntry:', err);
+    return res.status(500).json({ success: false, message: 'Errore interno', error: err.message });
+  }
+};
+
 // Configurazione multer per upload immagini progetti e appartamenti
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
@@ -328,7 +346,8 @@ const createProjectLogic = async (req, res) => {
       startDate,
       endDate,
       budget: parseFloat(budget) || 0,
-      visible: visible === 'true',
+      // Visibilità controllata dal body (toggle). Default: true se non specificata
+      visible: (typeof visible !== 'undefined') ? (visible === 'true' || visible === true) : true,
       featured: featured === 'true',
       images,
       createdBy: req.user.id
@@ -1007,7 +1026,8 @@ module.exports.updateProject = async (req, res) => {
       startDate,
       endDate,
       budget: parseFloat(budget) || 0,
-      visible: visible === 'true',
+      // Visibilità: usa il valore passato nel body se presente, altrimenti mantieni quello esistente
+      visible: (typeof visible !== 'undefined') ? (visible === 'true' || visible === true) : existingProject.visible,
       featured: featured === 'true',
       location: location || existingProject.location,
       notes: notes || existingProject.notes

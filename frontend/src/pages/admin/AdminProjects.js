@@ -281,6 +281,16 @@ const AdminProjects = ({ onStatsUpdate }) => {
         ? `${API_URL}/api/admin/projects/${currentProject._id}`
         : `${API_URL}/api/admin/projects`;
 
+      // Validazione date: startDate deve essere <= endDate
+      const sd = formData.startDate ? new Date(formData.startDate) : null;
+      const ed = formData.endDate ? new Date(formData.endDate) : null;
+      if (sd && ed && sd > ed) {
+        setLoading(false);
+        setError('La data di inizio non può essere successiva alla data di fine.');
+        setTimeout(() => setError(''), 5000);
+        return;
+      }
+
       // IMPORTANTE: Prepariamo i dati del progetto
       const formDataToSend = new FormData();
 
@@ -840,6 +850,49 @@ const AdminProjects = ({ onStatsUpdate }) => {
                       name="budget"
                       value={formData.budget}
                       onChange={handleChange}
+                    />
+                  </Form.Group>
+                </Col>
+              </Row>
+
+              {/* Date inizio/fine lavori */}
+              <Row>
+                <Col md={6}>
+                  <Form.Group className="mb-3">
+                    <Form.Label>Data Inizio Lavori</Form.Label>
+                    <Form.Control
+                      type="date"
+                      name="startDate"
+                      value={formData.startDate || ''}
+                      onChange={handleChange}
+                      max={formData.endDate || undefined}
+                    />
+                  </Form.Group>
+                </Col>
+                <Col md={6}>
+                  <Form.Group className="mb-3">
+                    <Form.Label>Data Fine Lavori</Form.Label>
+                    <Form.Control
+                      type="date"
+                      name="endDate"
+                      value={formData.endDate || ''}
+                      onChange={handleChange}
+                      min={formData.startDate || undefined}
+                    />
+                  </Form.Group>
+                </Col>
+              </Row>
+
+              {/* Visibilità */}
+              <Row>
+                <Col md={12}>
+                  <Form.Group className="mb-2 d-flex align-items-center">
+                    <Form.Check
+                      type="switch"
+                      id="project-visible-switch"
+                      label="Visibile (mostra nel sito)"
+                      checked={!!formData.visible}
+                      onChange={(e) => setFormData(prev => ({ ...prev, visible: e.target.checked }))}
                     />
                   </Form.Group>
                 </Col>

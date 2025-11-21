@@ -266,7 +266,8 @@ router.get('/projects', async (req, res) => {
    * @desc    Aggiorna un progetto esistente
    * @access  Solo admin
    */
-  router.put('/projects/:id', projectController.updateProject);
+  // Usa l'entrypoint che gestisce sia multipart/form-data che JSON
+  router.put('/projects/:id', projectController.updateProjectEntry);
   
   /**
    * @route   DELETE /api/admin/projects/:id

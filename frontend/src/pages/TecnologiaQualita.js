@@ -171,7 +171,7 @@ const TecnologiaQualita = () => {
               <div className="quality-content">
                 <h3>Certificazioni e Conformità</h3>
                 <p>
-                  CSV opera nel pieno rispetto delle normative nazionali e internazionali, con certificazioni che attestano la nostra dedizione alla qualità e alla sicurezza.
+                  CSV sviluppa i propri processi organizzativi facendo riferimento alle best practice contenute nelle principali norme ISO del settore.
                 </p>
                 <ul className="quality-list">
                   <li>
