@@ -250,15 +250,7 @@ const Progetti = () => {
                       <div className="hotel-price-section">
                         {project.projectType === 'Multiproprietà' ? (
                           <div className="multipropriety-info">
-                            <div className="price-row">
-                              <span className="price-label">Valore Totale</span>
-                              <span className="price-value">
-                                {project.budget > 0 
-                                  ? `€${parseInt(project.budget).toLocaleString('it-IT')}` 
-                                  : 'Su richiesta'
-                                }
-                              </span>
-                            </div>
+                           
                             <div className="apartments-count">
                               <FontAwesomeIcon icon={faBuilding} className="apartments-icon" />
                               <span>{project.apartments ? project.apartments.length : 0} appartamenti disponibili</span>
@@ -268,27 +260,7 @@ const Progetti = () => {
                           // Progetto Singolo - Mostra prezzo progetto
                           (
                             <div className="single-apartment-info">
-                              <div className="price-row">
-                                <span className="price-label">Valore totale</span>
-                                <span className="price-value">
-                                  {(() => {
-                                     if (!project) return 'Su richiesta';
-                                     
-                                     const apartment = project.apartments?.[0];
-                                     const apartmentBudget = apartment?.budget;
-                                     const projectBudget = project.budget;
-                                     
-                                     if (apartmentBudget && apartmentBudget > 0) {
-                                       return `€${parseInt(apartmentBudget).toLocaleString('it-IT')}`;
-                                     } else if (projectBudget && projectBudget > 0) {
-                                       return `€${parseInt(projectBudget).toLocaleString('it-IT')}`;
-                                     } else {
-                                       return 'Su richiesta';
-                                     }
-                                   })()
-                                   }
-                                </span>
-                              </div>
+                             
                               
                               <div className="apartments-count">
                                 <FontAwesomeIcon icon={faBuilding} className="apartments-icon" />

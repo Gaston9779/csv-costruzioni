@@ -842,17 +842,7 @@ const AdminProjects = ({ onStatsUpdate }) => {
                     </Form.Select>
                   </Form.Group>
                 </Col>
-                <Col md={6}>
-                  <Form.Group className="mb-3">
-                    <Form.Label>Budget (€)</Form.Label>
-                    <Form.Control
-                      type="number"
-                      name="budget"
-                      value={formData.budget}
-                      onChange={handleChange}
-                    />
-                  </Form.Group>
-                </Col>
+          
               </Row>
 
               {/* Date inizio/fine lavori */}
@@ -1058,7 +1048,6 @@ const AdminProjects = ({ onStatsUpdate }) => {
           <th>Categoria</th>
           <th>Tipo</th>
           <th>Stato</th>
-          <th>Budget</th>
           <th>Data Inizio</th>
           <th>Data Fine</th>
           <th>Azioni</th>
@@ -1112,7 +1101,7 @@ const AdminProjects = ({ onStatsUpdate }) => {
                   {project.status}
                 </Badge>
               </td>
-              <td>{project.budget ? `€${parseInt(project.budget).toLocaleString('it-IT')}` : 'N/D'}</td>
+             
               <td>{formatDate(project.startDate)}</td>
               <td>{formatDate(project.endDate)}</td>
               <td>
@@ -1195,9 +1184,7 @@ const AdminProjects = ({ onStatsUpdate }) => {
                 </p>
               </Col>
               <Col md={4} className="text-md-end">
-                <p className="mb-1">
-                  <strong>Budget:</strong> {currentProject.budget ? `€${parseInt(currentProject.budget).toLocaleString('it-IT')}` : 'N/D'}
-                </p>
+              
                 <p className="mb-1">
                   <strong>Data inizio:</strong> {formatDate(currentProject.startDate)}
                 </p>
@@ -1307,10 +1294,7 @@ const AdminProjects = ({ onStatsUpdate }) => {
                                 <FontAwesomeIcon icon={faTimes} className="me-2" />
                                 <strong>Piano:</strong> {apt.floor !== undefined && apt.floor !== null ? apt.floor : 'N/D'}
                               </p>
-                              <p>
-                                <FontAwesomeIcon icon={faEuroSign} className="me-2" />
-                                <strong>Prezzo:</strong> {apt.budget ? `€${parseInt(apt.budget).toLocaleString('it-IT')}` : 'N/D'}
-                              </p>
+                             
                             </Col>
                           </Row>
 

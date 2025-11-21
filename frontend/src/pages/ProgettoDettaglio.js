@@ -254,19 +254,7 @@ const ProgettoDettaglio = () => {
                           </Card.Body>
                         </Card>
                       </Col>
-                      <Col md={6}>
-                        <Card className="info-card h-100 border-0 shadow-sm">
-                          <Card.Body>
-                            <div className="d-flex align-items-center mb-2">
-                              <FontAwesomeIcon icon={faEuroSign} className="text-primary me-2" size="lg" />
-                              <div>
-                                <small className="text-muted d-block">Budget</small>
-                                <strong>{project.budget ? `€${parseInt(project.budget).toLocaleString('it-IT')}` : 'Non specificato'}</strong>
-                              </div>
-                            </div>
-                          </Card.Body>
-                        </Card>
-                      </Col>
+                     
                       <Col md={6}>
                         <Card className="info-card h-100 border-0 shadow-sm">
                           <Card.Body>
