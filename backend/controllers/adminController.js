@@ -301,9 +301,9 @@ const adminController = {
           fileType: doc.file_type,
           fileSize: doc.file_size,
           uploadedAt: doc.uploaded_at,
-          clientId: doc.client._id,
-          clientName: doc.client.name,
-          clientEmail: doc.client.email
+          clientId: doc.client ? doc.client._id : null,
+          clientName: doc.client ? doc.client.name : null,
+          clientEmail: doc.client ? doc.client.email : null
         }))
       });
 
