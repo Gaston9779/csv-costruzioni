@@ -210,40 +210,38 @@ const AdminDashboard = ({ user, onLogout }) => {
       <Container fluid className="admin-content">
         <Tab.Container activeKey={activeTab} onSelect={setActiveTab}>
           <Row>
-            {/* Sidebar: nascosta quando si è nella tab projects per lasciare full-width */}
-            {activeTab !== 'projects' && (
-              <Col md={3} lg={2} className="admin-sidebar">
-                <Nav variant="pills" className="flex-column">
-                  <Nav.Item>
-                    <Nav.Link eventKey="dashboard">
-                      <FontAwesomeIcon icon={faChartBar} className="me-2" />
-                      Dashboard
-                    </Nav.Link>
-                  </Nav.Item>
-                  <Nav.Item>
-                    <Nav.Link eventKey="clients">
-                      <FontAwesomeIcon icon={faUsers} className="me-2" />
-                      Gestione Clienti
-                    </Nav.Link>
-                  </Nav.Item>
-                  <Nav.Item>
-                    <Nav.Link eventKey="projects">
-                      <FontAwesomeIcon icon={faProjectDiagram} className="me-2" />
-                      Gestione Progetti
-                    </Nav.Link>
-                  </Nav.Item>
-                  <Nav.Item>
-                    <Nav.Link eventKey="stats">
-                      <FontAwesomeIcon icon={faFileAlt} className="me-2" />
-                      Statistiche
-                    </Nav.Link>
-                  </Nav.Item>
-                </Nav>
-              </Col>
-            )}
+            {/* Sidebar: sempre visibile per tutte le sezioni */}
+            <Col md={3} lg={2} className="admin-sidebar">
+              <Nav variant="pills" className="flex-column">
+                <Nav.Item>
+                  <Nav.Link eventKey="dashboard">
+                    <FontAwesomeIcon icon={faChartBar} className="me-2" />
+                    Dashboard
+                  </Nav.Link>
+                </Nav.Item>
+                <Nav.Item>
+                  <Nav.Link eventKey="clients">
+                    <FontAwesomeIcon icon={faUsers} className="me-2" />
+                    Gestione Clienti
+                  </Nav.Link>
+                </Nav.Item>
+                <Nav.Item>
+                  <Nav.Link eventKey="projects">
+                    <FontAwesomeIcon icon={faProjectDiagram} className="me-2" />
+                    Gestione Progetti
+                  </Nav.Link>
+                </Nav.Item>
+                <Nav.Item>
+                  <Nav.Link eventKey="stats">
+                    <FontAwesomeIcon icon={faFileAlt} className="me-2" />
+                    Statistiche
+                  </Nav.Link>
+                </Nav.Item>
+              </Nav>
+            </Col>
 
             {/* Main Content */}
-            <Col md={activeTab === 'projects' ? 12 : 9} lg={activeTab === 'projects' ? 12 : 10} className="admin-main">
+            <Col md={9} lg={10} className="admin-main">
               <Tab.Content>
                 {/* Dashboard Overview */}
                 <Tab.Pane eventKey="dashboard">
